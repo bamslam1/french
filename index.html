@@ -12,9 +12,12 @@
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       OneSignalDeferred.push(async function(OneSignal) {
         await OneSignal.init({
-          appId: "9b660c5a-c61a-4b13-a21e-2cdb64ffab17",
+           appId: "9b660c5a-c61a-4b13-a21e-2cdb64ffab17", 
+          path: "/french/",
+          allowLocalhostAsSecureOrigin: true 
         });
       });
+    </script>
     </script>
   </head>
   <body>
