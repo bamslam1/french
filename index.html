@@ -7,18 +7,19 @@
     <link rel="stylesheet" href="Styles/style.css">
     <link id="favicon" rel="icon" type="image/png" href="Images/favicon-halloween.ico" size="any">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    <script>
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      OneSignalDeferred.push(async function(OneSignal) {
-        await OneSignal.init({
-           appId: "9b660c5a-c61a-4b13-a21e-2cdb64ffab17", 
-          path: "/french/",
-          allowLocalhostAsSecureOrigin: true 
-        });
-      });
-    </script>
-    </script>
+    <script src="https://onesignal.com" defer></script>
+<script>
+  window.OneSignal = window.OneSignal || [];
+  OneSignal.push(async function() {
+    await OneSignal.init({
+      appId: "9b660c5a-c61a-4b13-a21e-2cdb64ffab17",
+      allowLocalhostAsSecureOrigin: true,
+      
+      serviceWorkerParam: { scope: "/french/" },
+      serviceWorkerPath: "OneSignalSDKWorker.js"
+    });
+  });
+</script>
   </head>
   <body>
     <noscript>
