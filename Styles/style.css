@@ -58,7 +58,7 @@ input[type="text"] {
   width: auto;
   padding: 7px;
   box-sizing: border-box;
-  
+  width: calc(100% - 180px);
 }
 
 input[type="range"] {
