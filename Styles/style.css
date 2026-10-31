@@ -52,13 +52,11 @@ input[type="text"] {
 }
 
 .listenControls input[type="range"] {
-  flex: 1;
-  min-width: 0;
+  width: calc(100% - 180px);
   max-width: 500px;
-  width: auto;
+  flex-shrink: 0;
   padding: 7px;
   box-sizing: border-box;
-  width: calc(100% - 180px);
 }
 
 input[type="range"] {
