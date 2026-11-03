@@ -5,23 +5,8 @@
     <meta name="google" content="notranslate">
     <title>FrançaisFlash</title>
     <link rel="stylesheet" href="Styles/style.css">
-    <link id="favicon" rel="icon" type="image/png" href="Images/favicon-halloween.ico" size="any">
+    <link id="favicon" rel="icon" type="image/png" href="Images/favicon-icon.ico" size="any">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- Load OneSignal SDK -->
-<!--<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "9b660c5a-c61a-4b13-a21e-2cdb64ffab17",
-      allowLocalhostAsSecureOrigin: true,
-      
-      // Forces the browser to search inside the subfolder instead of the root page
-      serviceWorkerPath: "OneSignalSDKWorker.js",
-      serviceWorkerParam: { scope: "/french/" }
-    });
-  });
-</script>
   </head>
   <body>
     <noscript>
@@ -39,10 +24,10 @@
     <!--<div class="scoreGroup transitionOut" onmouseenter="mouseIn = true; setTimeout(() => {}, 3000); if (mouseIn === true) {startFade(this, 2000);};" onmouseleave="mouseIn = false; this.classList.remove('hidden');">-->
     <p class="score">Loading...</p>
     <button class="reset-score" onclick="score.wins = 0; score.losses = 0; updateScore();">Reset Score</button>
-    <button class="reset-score2" onclick="resetAllScore();">Reset All Score</button>
+    <button class="reset-score2" onclick="resetAllScore(); console.log(this);">Reset All Score</button>
     <a href="https://github.com/bamslam1/French/issues" target="_blank" rel="noopener noreferer" class="bott-right"><button title="Press new issue to create a report">Report A Bug</button></a>
     <p id="error" hidden>Error</p>
-    <p class="ver">v9.6.6</p>
+    <p class="ver">v10.6.5</p>
     <main>
       <div id="startScreen">
         <h1 class="title">FrançaisFlash</h1>
@@ -53,8 +38,7 @@
         <button data-page="game" onclick="pressedStartCount++; gamemode();">Start Game</button>
         <br><br>
         <button class="abtErrors" onclick="showAbtErrors();">More About Errors</button>
-        <a target="_blank" rel="noopener noreferer" href="https://bamslam1.github.io/french-early"><button>Access Early Version</button></a>
-        <!--<button id="remind-btn">Test Notification</button>-->
+        <button onclick="showBugs();">Known Bugs</button>
       </div>
 
       <div id="gamemode" hidden>
@@ -64,20 +48,26 @@
         <button onclick="startGame('medium');">Medium</button>
         <button onclick="startGame('hard');">Hard</button>
         <button onclick="startGame('all');">All</button>
-        <button onclick="if (customPhrases === allPhrases) {custom();} else if (customPhrases.length === 0) {console.warn('Cannot Play With No Phrases'); custom();} else {startGame('custom');};">Custom</button>
+        <button onclick="startGame('blitz');">Blitz</button>
+        <button onclick="if (customPhrases === allPhrases) {custom();} else if (customPhrases.length === 0) {console.log('Cannot Play With No Phrases'); custom();} else {startGame('custom');};">Custom</button>
         <br><br>
         <h2>Limited Time</h1>
-        <button onclick="startGame('seasonal');" title="This gamemode will be removed at November 1st">👻 Halloween 👻</button>
+        <button onclick="startGame('seasonal');" title="This gamemode will be removed at November 30st">🌹 Remeberance 🌹</button>
+        <button onclick="startGame('seasonal2');" title="This gamemode will be removed at November 30st">🦃 Thanksgiving 🦃</button>
         <br><br>
         <p class="allScore space"></p>
-        <button class="red" onclick="resetAllScore();">Reset All Score</button>
+        <button class="reset-score-gamemode" onclick="resetAllScore();">Reset All Score</button>
       </div>
 
       <div id="game" hidden>
-        <img src="Images\halloween-overlay.png" class="overlay" id="overlay" hidden>
-        <img src="Images\halloween-overlay-vertical.png" class="overlay" id="overlay-v" hidden>
+        <img src="Images\remember-overlay.png" class="overlay seasonalOverlay" id="sOverlay" hidden>
+        <img src="Images\remember-overlay-vertical.png" class="overlay seasonalOverlay-v" id="sOverlay-v" hidden>
+        <img src="Images\thanksgiving-overlay.png" class="overlay seasonal2Overlay" id="sOverlay2" hidden>
+        <img src="Images\remember-overlay-vertical.png" class="overlay seasonal2Overlay-v" id="sOverlay2-v" hidden>
+        <div class="fillerTop"></div>
         <button type="game" class="back" onclick="stopBgm(); gamemode();">Back</button>
         <button type="game" id="mute" onclick="toggleMute();">🔊</button>
+        <p id="timer-display">loading...</p>
         <span lang="fr" translate="no"><p class="phrase">
         Loading...
         </p>
@@ -117,7 +107,7 @@
         <img src="Images/halloween-win-overlay.gif" class="sznRightGif seasonalResult transitionOut" alt="Incorrect GIF" hidden>
         <img src="Images\halloween-overlay.png" class="overlay" id="overlay" hidden>
         <img src="Images\halloween-overlay-vertical.png" class="overlay" id="overlay-v" hidden>
-        <p class="result-message"></p>
+        <p class="result-message space"></p>
         <p class="correct-answer space"></p>
         <button id="speech" onclick="speak();">🔊 Listen</button>
         <button data-page="result" onclick="
@@ -147,8 +137,24 @@
         </p>
       </div>
 
+      <div id="bugs" hidden>
+        <button onclick="showStartScreen();">Back</button>
+        <h2>Bugs</h2>
+        <p>
+          1. Halloween effects not being applied when using listen mode.
+          <br><br>
+          2. Overlay not applying when playing the halloween mode.
+          <br><br>
+          3. Persistant loading screen when Halloween gamemode button clicked and then clicking other gamemode. This can happen if you set your wifi speed (using Chrome DevTools network tab) and quickly pressing another gamemode. Your gamemode won't get switched if this happens.
+          <br><br>
+          4. The button effects don't apply when using the halloween listen only mode.
+          <br><br>
+          <b>All of these bugs are currently being looked into and will be fixed as soon as possible.</b>
+        </p>
+      </div>
+
       <div class="filler"></div>
     </main>
-    <script src="Scripts\script.js" defer></script>
+    <script src="Scripts/script.js" defer></script>
   </body>
 </html>
