@@ -267,6 +267,29 @@ const hardPhrases = [
   { french: "Mieux vaut prévenir que guérir",                     answers: ["prevention is better than cure", "an ounce of prevention is worth a pound of cure", "it's better to prevent than to cure", "it is better to prevent than to cure", "better safe than sorry"] },
 ];
 
+const seasonal2Phrases = [
+{ french: "Joyeux Halloween",                                  answers: ["happy halloween"] },
+{ french: "Des bonbons ou un sort",                           answers: ["trick or treat", "candy or a spell", "sweets or a spell"] },
+{ french: "Le fantôme",                                       answers: ["ghost", "the ghost", "a ghost"] },
+{ french: "La citrouille",                                    answers: ["pumpkin", "the pumpkin", "a pumpkin"] },
+{ french: "La sorcière",                                      answers: ["witch", "the witch", "a witch"] },
+{ french: "Le squelette",                                     answers: ["skeleton", "the skeleton", "a skeleton"] },
+{ french: "La chauve-souris",                                 answers: ["bat", "the bat", "a bat"] },
+{ french: "La maison hantée",                                 answers: ["haunted house", "the haunted house", "a haunted house"] },
+{ french: "J'ai peur",                                        answers: ["i'm scared", "i am scared", "i'm afraid", "i am afraid"] },
+{ french: "Ça fait peur",                                     answers: ["it's scary", "it is scary", "that's scary", "that is scary", "it's frightening", "it is frightening"] },
+{ french: "Il y a des toiles d'araignée partout",             answers: ["there are spiderwebs everywhere", "there are spider webs everywhere", "there are cobwebs everywhere"] },
+{ french: "Je me suis déguisé en vampire",                    answers: ["i dressed up as a vampire", "i dressed as a vampire", "i disguised myself as a vampire", "i wore a vampire costume"] },
+{ french: "Elle porte un costume de sorcière",                answers: ["she's wearing a witch costume", "she is wearing a witch costume", "she's wearing a witch's costume", "she is wearing a witch's costume"] },
+{ french: "Quel est ton déguisement?",                        answers: ["what is your costume?", "what's your costume?", "what is your costume", "what's your costume", "what are you dressed as?", "what are you dressed as"] },
+{ french: "J'ai sculpté une citrouille",                      answers: ["i carved a pumpkin", "i have carved a pumpkin", "i sculpted a pumpkin"] },
+{ french: "Raconte-moi une histoire qui fait peur",           answers: ["tell me a scary story", "tell me a story that is scary", "tell me a frightening story"] },
+{ french: "Les portes grincent dans la nuit",                 answers: ["the doors creak in the night", "the doors are creaking in the night", "the doors squeak in the night"] },
+{ french: "Ne sors pas seul la nuit d'Halloween",             answers: ["don't go out alone on halloween night", "do not go out alone on halloween night", "don't go out alone on halloween", "do not go out alone on halloween"] },
+{ french: "Les enfants sonnent à toutes les portes",          answers: ["the children ring every doorbell", "the kids ring every doorbell", "the children ring at every door", "the kids ring at every door"] },
+{ french: "Personne n'ose entrer dans la maison abandonnée",  answers: ["nobody dares to enter the abandoned house", "nobody dares enter the abandoned house", "no one dares to enter the abandoned house", "no one dares enter the abandoned house"] },
+];
+
 const seasonalPhrases = [
 { french: "Joyeux Halloween",                                  answers: ["happy halloween"] },
 { french: "Des bonbons ou un sort",                           answers: ["trick or treat", "candy or a spell", "sweets or a spell"] },
@@ -290,6 +313,9 @@ const seasonalPhrases = [
 { french: "Personne n'ose entrer dans la maison abandonnée",  answers: ["nobody dares to enter the abandoned house", "nobody dares enter the abandoned house", "no one dares to enter the abandoned house", "no one dares enter the abandoned house"] },
 ];
 
+let blitzInterval = null;
+let INITIAL_TIMER_SECONDS = 30;
+
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function boost(audio, gain) {
@@ -306,9 +332,13 @@ const soundWrong = new Audio("Sounds/wrong.mp3");
 boost(soundWrong, 2);
 const soundRoll = new Audio("Sounds/dice.mp3");
 boost(soundRoll, 3);
+const soundJeopardy = new Audio('Sounds/jeopardy.mp3');
 const bgm = new Audio('Sounds/bgm.mp3');
 bgm.loop = true;
 bgm.volume = 0;
+const bgm2 = new Audio('Sounds/bgm2.mp3');
+bgm2.loop = true;
+bgm2.volume = 0;
 
 const BGM_VOLUME = 0.2;
 const FADE_MS = 1500;
@@ -342,11 +372,22 @@ function stopBgm() {
   });
 }
 
+function startBgm2() {
+  bgm2.play().then(() => fadeTo(BGM_VOLUME)).catch(() => {error('Unable to begin bgm playback')});
+}
+
+function stopBgm2() {
+  fadeTo(0, () => {
+    bgm2.pause();
+    bgm2.currentTime = 0;
+  });
+}
+
 const KEY = "customPhrases";
 
 let backToScreen = 0;
 
-const phrasesByMode = { all: allPhrases, easy: easyPhrases, medium: mediumPhrases, hard: hardPhrases, custom: customPhrases, seasonal: seasonalPhrases };
+const phrasesByMode = { all: allPhrases, easy: easyPhrases, medium: mediumPhrases, hard: hardPhrases, custom: customPhrases, seasonal: seasonalPhrases, seasonal2: seasonal2Phrases };
 
 let currentMode = load('frenchGamemode', 'all');
 
@@ -438,64 +479,8 @@ function showStartScreen() {
   document.getElementById('abtErrors').hidden = true;
 
   showScoreBool(false);
-  checkSeasonal(); // <--- THIS REMOVES THE OVERLAY ON THE START SCREEN
+  checkSeasonal();
 }
-
-let notificationPerms = null;
-
-function requestNotificationPermission() {
-  Notification.requestPermission().then((permission) => {
-    permission = notificationPerms;
-  });
-}
-
-function sendNotification(body) {
-  if (Notification.permission === "granted") {
-    const notification = new Notification
-("FrançaisFlash 👻", {
-    body: body,
-    icon: "https://bamslam1.github.io/french/Images/favicon-halloween.png"
-});
-
-    // Optional: Handle clicking the notification
-    notification.onclick = () => {
-      window.focus(); 
-    };
-  } else {
-    console.log("Notifications are blocked or not requested yet.");
-  }
-}
-
-// Make sure this is at the absolute bottom of script.js, outside of any other functions!
-Array.from(document.querySelectorAll("button")).forEach((btn) => {
-  if (btn.textContent.trim() === "Test Notification") {
-    
-    btn.onclick = () => {
-      console.log("Test Notification button clicked! Initializing OneSignal queue...");
-      
-      window.OneSignal = window.OneSignal || [];
-      
-      OneSignal.push(async function() {
-        try {
-          console.log("OneSignal library ready inside queue. Triggering popup window...");
-          
-          // Request browser prompt permission via OneSignal
-          await OneSignal.Notifications.requestPermission();
-          
-          const targetTime = new Date(Date.now() + 5 * 60 * 1000);
-          alert("Spooky reminder registered successfully! You can safely close the site now. See you in 5 minutes! 🎃");
-          console.log("Offline push successfully scheduled for:", targetTime);
-          console.log(targetTime);
-          
-        } catch (error) {
-          console.error("OneSignal push configuration failed inside queue:", error);
-        }
-      });
-    };
-    
-    console.log("Successfully bound OneSignal push logic to the Test Notification button!");
-  }
-});
 
 function showScoreBool(bool) {
   if (bool) {
@@ -512,7 +497,7 @@ function showScoreBool(bool) {
 }
 
 function resetAllScore() {
-  modeScores.easy.wins = 0; modeScores.easy.losses = 0; modeScores.medium.wins = 0; modeScores.medium.losses = 0; modeScores.hard.wins = 0; modeScores.hard.losses = 0; modeScores.all.losses = 0; modeScores.all.wins = 0; modeScores.custom.losses = 0; modeScores.custom.wins = 0; modeScores.seasonal.losses = 0; modeScores.seasonal.wins = 0; updateScore();
+  modeScores.easy.wins = 0; modeScores.easy.losses = 0; modeScores.medium.wins = 0; modeScores.medium.losses = 0; modeScores.hard.wins = 0; modeScores.hard.losses = 0; modeScores.all.losses = 0; modeScores.all.wins = 0; modeScores.custom.losses = 0; modeScores.custom.wins = 0; modeScores.seasonal.losses = 0; modeScores.seasonal.wins = 0; modeScores.seasonal2.losses = 0; modeScores.seasonal2.wins = 0; updateScore();
 }
 
 function showGameComponents(mode) {
@@ -541,12 +526,10 @@ function checkSeasonal(mode) {
   const shouldShowOverlay = activeMode === 'seasonal' && (isGameVisible || isResultVisible);
 
   if (shouldShowOverlay) {
-    document.body.classList.add('halloween');
+    document.body.classList.add('seasonal');
     document.getElementById('mute').hidden = false;
 
-    // Apply styles to buttons on Game AND Result screens
     document.querySelectorAll('.move-button, button, button[type="game"]').forEach(b => {
-      // Exclude Reset, Gamemode Menu, and Bug Report buttons
       const isResetButton = b.classList.contains('reset-score-button') || b.closest('.reset-score') || b.closest('.reset-score2');
       const isGamemodeMenuButton = b.closest('#gamemode');
       const isBugReportButton = b.textContent.includes('Report A Bug');
@@ -558,32 +541,68 @@ function checkSeasonal(mode) {
       }
     });
 
-    // Ensure music continues if already playing (prevents restarting)
     if (!muted && bgm.paused) {
       startBgm();
     }
-  } else {
-    // 3. Remove effects on Start Screen, Gamemode Screen, etc.
+    } else {
     document.body.classList.remove('halloween');
     document.querySelectorAll('.move-button, button, button[type="game"]').forEach(b => b.classList.remove('seasonal'));
     
     document.getElementById('mute').hidden = true;
     stopBgm();
   }
+  const shouldShowOverlay2 = activeMode === 'seasonal2' && (isGameVisible || isResultVisible);
+
+  if (shouldShowOverlay2) {
+    //////////////////////////// Changes body class
+    document.body.classList.add('seasonal2');
+    document.getElementById('mute').hidden = false;
+
+    document.querySelectorAll('.move-button, button, button[type="game"]').forEach(b => {
+      const isResetButton = b.classList.contains('reset-score-button') || b.closest('.reset-score') || b.closest('.reset-score2');
+      const isGamemodeMenuButton = b.closest('#gamemode');
+      const isBugReportButton = b.textContent.includes('Report A Bug');
+      
+      if (!isResetButton && !isGamemodeMenuButton && !isBugReportButton) {
+        b.classList.add('seasonal');
+      } else {
+        b.classList.remove('seasonal');
+      }
+    });
+
+    if (!muted && bgm2.paused) {
+      startBgm2();
+    }
+    } else {
+    document.body.classList.remove('seasonal2');
+    document.querySelectorAll('.move-button, button, button[type="game"]').forEach(b => b.classList.remove('seasonal2'));
+    
+    document.getElementById('mute').hidden = true;
+    stopBgm2();
+  }
 }
 
 let muted = false;
 
 function toggleMute() {
-  if (!muted) {
-    stopBgm();
-    document.getElementById('mute').textContent = '🔇';
-    muted = true;
-  } else {
-    startBgm();
-    document.getElementById('mute').textContent = '🔊';
-    muted = false;
-  }
+  const baseMode = currentMode.replace("listen", "");
+    if (!muted) {
+      if (baseMode === 'seasonal') {
+        stopBgm();
+      } else {
+        stopBgm2();
+      }
+      document.getElementById('mute').textContent = '🔇';
+      muted = true;
+    } else {
+      if (baseMode === 'seasonal') {
+        startBgm();
+      } else {
+        startBgm2();
+      }
+      document.getElementById('mute').textContent = '🔊';
+      muted = false;
+    }
 }
 
 function error(mes) {
@@ -611,15 +630,34 @@ async function startGame(mode = currentMode) {
 
   currentMode = mode;
 
+  document.querySelector('.seasonal2Overlay').hidden = true;
+  document.querySelector('.seasonalOverlay').hidden = true;
+  document.getElementById('timer-display').hidden = true;
   if (mode === 'seasonal') {
     await getServerTime();
-  };
+    document.querySelector('.seasonalOverlay').hidden = false;
+    document.querySelector('.fillerTop').hidden = false;
+  } else if (mode === 'seasonal2') {
+    await getServerTime();
+    document.querySelector('.seasonal2Overlay').hidden = false;
+    document.querySelector('.fillerTop').hidden = false;
+  } else { 
+    document.querySelector('.fillerTop').hidden = true;
+    document.body.classList.remove('seasonal');
+  }
+
+  if (mode === 'blitz') {
+    document.getElementById('timer-display').textContent = 'Loading...';
+    document.getElementById('timer-display').hidden = false;
+    blitzStartTime = performance.now();
+    startBlitzCountdown();
+    soundJeopardy.play();
+  }
 
   let allowed = mode !== 'seasonal';
-  if (mode === 'seasonal' && serverTime !== null) {
-    allowed = serverTime.getMonth() === 9 ||
-      (serverTime.getFullYear() < 2027 && serverTime.getMonth() === 10 && serverTime.getDate() === 1);
-  };
+  if (mode === 'seasonal' && serverTime !== null || mode === 'seasonal2' && serverTime !== null) {
+    allowed = serverTime.getFullYear() < 2027 && serverTime.getMonth() === 10;
+  }
 
   if (!allowed) {
     error('This mode is unavailable');
@@ -636,11 +674,11 @@ async function startGame(mode = currentMode) {
   } else {
     pickPhrase();
   }
-}
+  }
 
 let modeScores = {};
 try {
-  const MODES = ['all', 'easy', 'medium', 'hard', 'custom', 'seasonal'];
+  const MODES = ['all', 'easy', 'medium', 'hard', 'custom', 'seasonal', 'seasonal2'];
   const readJSON = key => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } };
   const num = v => Number(v) || 0;
 
@@ -708,7 +746,7 @@ function custom() {
     const label = currentMode.charAt(0).toUpperCase() + currentMode.slice(1);
     document.querySelector('.score').innerHTML = `${label}: Wins ${score.wins} | Losses ${score.losses}`;
 
-    try {document.querySelector('.allScore').textContent = `Easy: Wins ${modeScores.easy.wins} | Losses ${modeScores.easy.losses}\nMedium: Wins ${modeScores.medium.wins} | Losses ${modeScores.medium.losses}\nHard: Wins ${modeScores.hard.wins} | Losses ${modeScores.hard.losses}\n Custom: Wins ${modeScores.custom.wins} | Losses ${modeScores.custom.losses}\nSeasonal: Wins ${modeScores.seasonal.wins} | Losses ${modeScores.seasonal.losses}`;}
+    try {document.querySelector('.allScore').textContent = `Easy: Wins ${modeScores.easy.wins} | Losses ${modeScores.easy.losses}\nMedium: Wins ${modeScores.medium.wins} | Losses ${modeScores.medium.losses}\nHard: Wins ${modeScores.hard.wins} | Losses ${modeScores.hard.losses}\n Custom: Wins ${modeScores.custom.wins} | Losses ${modeScores.custom.losses}\nSeasonal: Wins ${modeScores.seasonal.wins} | Losses ${modeScores.seasonal.losses}\nSeasonal2: Wins ${modeScores.seasonal2.wins} | Losses ${modeScores.seasonal2.losses}`;}
     catch {document.querySelector('.allScore').textContent = `Easy: Wins ${modeScores.easy.wins} | Losses ${modeScores.easy.losses}\nMedium: Wins ${modeScores.medium.wins} | Losses ${modeScores.medium.losses}\nHard: Wins ${modeScores.hard.wins} | Losses ${modeScores.hard.losses}`;}
   };
 
@@ -731,83 +769,67 @@ function showScore() {
 };
 
 function checkAnswer() {
+  if (blitzInterval) clearInterval(blitzInterval);
+
   const userInput = document.getElementById("userInput").value;
-
-  if (!userInput.trim()) {
-    document.querySelector('.submit').hidden = true;
-    document.getElementById('userInput').value = 'INVALID ENTRY';
-    invalidErr('INVALID ENTRY');
-    return;
-  }
-
-  delete savedPhrases[currentMode];
-  storeSavedPhrases();
-
-  document.getElementById("result").hidden = false;
-  document.getElementById("goAgain").hidden = true;
-  document.getElementById("game").hidden = true;
-
-  checkSeasonal(); // <--- THIS APPLIES THE OVERLAY TO THE RESULT SCREEN
-
   const isCorrect = current.answers.some(a => normalize(a) === normalize(userInput));
-
-  let gif = '';
-
-  if (isCorrect) {
-    if (currentMode === 'seasonal') {
-      gif = document.querySelector(".sznRightGif");
+  const result = document.querySelector(".result-message");
+  const baseMode = currentMode.replace("Listen", "");
+  
+  if (baseMode === 'blitz') {
+    if (!userInput.trim()) {
+      pickPhrase(); return;
+    } 
+    if (isCorrect) {
+      score.wins++; pickPhrase(); updateScore();
     } else {
-      gif = document.querySelector(".rightGif");
+      endGameBlitz(result);
     }
-    const result = document.querySelector(".result-message");
-    soundWin.play();
-    result.innerHTML = "Correct!";
-    result.style.color = "limegreen";
-    gif.hidden = false;
-    if (gif === document.querySelector(".sznRightGif")) {
+  } else {
+    if (!userInput.trim()) {
+      invalidErr(); return;
+    }
+    delete savedPhrases[currentMode];
+    storeSavedPhrases();
+
+    document.getElementById("result").hidden = false;
+    document.getElementById("goAgain").hidden = true;
+    document.getElementById("game").hidden = true;
+
+    checkSeasonal();
+
+    let gif = (baseMode === 'seasonal') 
+      ? document.querySelector(isCorrect ? ".sznRightGif" : ".sznWrongGif")
+      : document.querySelector(isCorrect ? ".rightGif" : ".wrongGif");
+
+    if (isCorrect) {
+      soundWin.play();
+      result.textContent = "Correct!";
+      result.style.color = "limegreen";
+      score.wins++;
+    } else {
+      soundWrong.play();
+      result.textContent = "Incorrect.";
+      result.style.color = "red";
+      score.losses++;
+    }
+    
+    if (gif) {
+      gif.hidden = false;
       gif.classList.remove('hidden');
       setTimeout(() => {
-        gif.classList.add('hidden');
-        document.getElementById("goAgain").hidden = false;
-      }, 2000);
-    } else {
-      setTimeout(() => {
-        gif.hidden = true;
+        if (!currentMode.includes('seasonal')) gif.hidden = true; 
+        else gif.classList.add('hidden');
         document.getElementById("goAgain").hidden = false;
       }, 1500);
-    }
-    score.wins++;
-    updateScore();
-  } else {
-    if (currentMode === 'seasonal') {
-      gif = document.querySelector(".sznWrongGif");
     } else {
-      gif = document.querySelector(".wrongGif");
+      document.getElementById("goAgain").hidden = false;
     }
-    const result = document.querySelector(".result-message");
-    soundWrong.play();
-    result.innerHTML = "Incorrect.";
-    result.style.color = "red";
-    gif.hidden = false;
-    if (gif === document.querySelector(".sznWrongGif")) {
-      gif.classList.remove('hidden');
-      setTimeout(() => {
-        gif.classList.add('hidden');
-        document.getElementById("goAgain").hidden = false;
-      }, 2000);
-    } else {
-      setTimeout(() => {
-        gif.hidden = true;
-        document.getElementById("goAgain").hidden = false;
-      }, 1000);
-    }
-    score.losses++;
+    
     updateScore();
+    showAnswers();
+    prevFrench = current.french;
   }
-
-  showAnswers();
-  prevFrench = current.french;
-  showScore();
 }
 
 function showAnswers() {
@@ -823,14 +845,16 @@ function showAnswers() {
 
 function reroll() {
   soundRoll.play();
+  if (currentMode !== 'blitz') {
   document.querySelector(".result-message").textContent = '';
   showAnswers();
   document.getElementById("game").hidden = true;
   document.getElementById("result").hidden = false;
   checkSeasonal();
+  prevFrench = current.french;
+  }
   score.losses++;
   updateScore();
-  prevFrench = current.french;
   pickPhrase();
 };
 
@@ -850,12 +874,19 @@ function normalize(text) {
 };
 
 function gamemode() {
-  stopBgm(); // Explicitly cut off BGM immediately when exiting to the screen select menu
+  try {stopBgm();}
+  catch {
+    try {stopBgm2();}
+    catch {
+      console.warn("Failed to stop BGM or BGM is inactive");
+    }
+  }
   document.getElementById('startScreen').hidden = true;
   document.getElementById('result').hidden = true;
   document.getElementById('custom').hidden = true;
   document.getElementById('gamemode').hidden = false;
   document.getElementById('game').hidden = true;
+  document.body.classList.remove('seasonal');
   showScoreBool(true);
   checkSeasonal();
 }
@@ -887,3 +918,56 @@ function checkHidden(srpt) {
 }
 
 let speechRate = load('speechRate', 0.9);
+let blitzStartTime = 0;
+
+function startBlitzCountdown() {
+  if (blitzInterval) clearInterval(blitzInterval);
+  
+  const timerElement = document.getElementById("timer-display");
+  if (!timerElement) return;
+
+  blitzInterval = setInterval(() => {
+    if (currentMode === 'blitz') {
+      const elapsedTime = (performance.now() - blitzStartTime) / 1000;
+      const timeLeft = Math.max(0, Math.ceil(INITIAL_TIMER_SECONDS - elapsedTime));
+      
+      timerElement.innerHTML = `Time Left: <b>${timeLeft}s</b>`;
+      
+      if (timeLeft <= 0) {
+        clearInterval(blitzInterval);
+        
+        const userInput = document.getElementById('userInput').value;
+        document.getElementById("result").hidden = false;
+        document.getElementById("goAgain").hidden = true;
+        document.getElementById("game").hidden = true;
+        
+        const result = document.querySelector(".result-message");
+        const answerElement = document.querySelector(".correct-answer");
+        answerElement.textContent = "PHRASE: " + current.french + "\n" +
+        "YOUR ANSWER: " + userInput + "\n" +
+        "ANSWER: " + current.answers.join(" / ");
+        
+        if (score.losses < score.wins) {
+          score.losses = score.wins;
+        }
+
+        result.textContent = "Time's Up!";
+        
+        score.wins = 0;
+        updateScore();
+      }
+    } else {
+      clearInterval(blitzInterval);
+      timerElement.textContent = '';
+    }
+  }, 200);
+}
+
+function showBugs() {
+  document.getElementById('gamemode').hidden = true;
+  document.getElementById('game').hidden = true;
+  document.getElementById('result').hidden = true;
+  document.getElementById('startScreen').hidden = true;
+  document.getElementById('abtErrors').hidden = true;
+  document.getElementById('bugs').hidden = false;
+}
