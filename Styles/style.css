@@ -2,9 +2,13 @@ body {
   font: normal 16px verdana;
 }
 
-body.halloween main {
-  max-width: 80%;
+body.seasonal main, body.seasonal2 main {
+  max-width: 85%;
   margin: 0 auto;
+}
+
+.fillerTop {
+  padding: calc(0px + 4vw);
 }
 
 #mute {
@@ -43,6 +47,10 @@ input[type="text"] {
   border-radius: 5px;
   max-width: 100%;
   box-sizing: border-box;
+}
+
+input[type="text"]:focus {
+  z-index: 9999;
 }
 
 .listenControls {
@@ -112,6 +120,11 @@ input[type="range"]:active {
   right: 150px;
 }
 
+.reset-score-gamemode {
+  background-color: #ed2828;
+  color: white;
+}
+
 .reset-score, .reset-score2 {
   font: bold 10px verdana;
   padding: 7px 12px;
@@ -157,11 +170,6 @@ input[type="range"]:active {
   pointer-events: none;
 }
 
-.red {
-  background-color: red;
-  color: white;
-}
-
 .allScore {
   font: bold 16px, sans-serif;
   white-space: pre-line;
@@ -173,6 +181,18 @@ input[type="range"]:active {
 
 main {
   overflow-wrap: anywhere;
+}
+
+@media (max-height: 600px) {
+  body.seasonal main {
+    max-width: 90%;
+    max-height: 50px;
+    margin: 0 auto;
+  }
+
+  .fillerTop {
+    padding: calc(0px + 3vw);
+  }
 }
 
 @media (max-width: 600px) {
@@ -203,17 +223,17 @@ main {
   .reset-score2 {
     left: 45px;
   }
-  .filler {
+  .filler{
   padding: calc(0px + 15vw);
   }
-    body.halloween #overlay {
+  body.seasonal #sOverlay {
     display: none;
   }
-  body.halloween #overlay-v {
+  body.seasonal #sOverlay-v {
     display: block;
   }
-  body.halloween main {
-    max-width: 85%;
+  body.seasonal main {
+    max-width: 95%;
   }
 }
 
@@ -242,6 +262,12 @@ main {
 
   #mute {
   position: static;
+  }
+  body.seasonal #overlay {
+    display: block;
+  }
+  body.seasonal #overlay-v {
+    display: none;
   }
 }
 
@@ -284,34 +310,11 @@ main {
 }
 
 .seasonal {
-  position: relative;
-  border: none;
-  padding: 8px 21px;
-  font: bold 16px Verdana, sans-serif;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: white;
-  background: linear-gradient(180deg, #ffa133 0%, #ff7a00 55%, #e86400 100%);
-  clip-path: polygon(0 12%, 100% 0, 97% 100%, 3% 88%);
-  filter: drop-shadow(2px 3px 0 #b34700);
-  cursor: pointer;
-  transition: transform 0.1s;
-  z-index: 1;
-}
-
-.seasonal:hover {
-  filter: drop-shadow(2px 3px 0 #b34700) brightness(1.1);
-  z-index: 9999;
-}
-
-.seasonal:active {
-  transform: translate(2px, 2px);
-  filter: drop-shadow(0 1px 0 #b34700);
+  height: 95%;
 }
 
 .bg {
   z-index: -1;
-
 }
 
 .overlay {
@@ -331,6 +334,6 @@ main {
   display: none;
 }
 
-body.halloween #overlay {
+body.seasonal #overlay {
   display: block;
 }
