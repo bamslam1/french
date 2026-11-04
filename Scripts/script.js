@@ -1,5 +1,23 @@
-const msg = document.querySelector(".phrase");
 let isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+function applyTheme() {
+  if (!isDark.setManually) {
+  document.body.style.backgroundColor = isDark ? 'rgb(25, 25, 25)' : 'rgb(244, 243, 242)';
+  document.body.style.color = isDark ? 'white' : 'black';
+
+  document.querySelectorAll('.move-button').forEach(button => {
+    button.style.borderColor = isDark ? 'white' : 'black';
+  });
+
+  document.querySelectorAll('.reset-score-button').forEach(button => {
+    button.style.backgroundColor = isDark ? 'white' : 'black';
+    button.style.color = isDark ? 'black' : 'white';
+  });
+  }
+  isDark.setManually = true;
+}
+
+const msg = document.querySelector(".phrase");
 
 function load(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
@@ -9,16 +27,17 @@ function load(key, fallback) {
 let serverTime = null;
 
 async function getServerTime() {
+  document.getElementById('error').textContent = 'Loading...';
+  document.getElementById('error').hidden = false;
   try {
     const res = await fetch(location.href, { method: 'HEAD', cache: 'no-store' });
     serverTime = new Date(res.headers.get('Date'));
   } catch {
     serverTime = null;
     error('Cannot fetch date');
-  };
+  }
+  document.getElementById('error').hidden = true;
 }
-
-getServerTime();
 
 let prevFrench = null;
 
@@ -29,7 +48,7 @@ let score = load('frenchScore', null) || {
 };
 
 const allPhrases = [
-  { french: "Bonjour",             answers: ["hello", "hi", "good morning"] },
+  { french: "Bonjour",             answers: ["hello", "hi", "good morning", "good day"] },
   { french: "Merci",               answers: ["thank you", "thanks"] },
   { french: "Au revoir",           answers: ["goodbye", "bye"] },
   { french: "S'il vous plaît",     answers: ["please"] },
@@ -140,7 +159,7 @@ let customPhrases = load('customPhrases', []).map(p => ({
 }));
 
 const easyPhrases = [
-  { french: "Bonjour",          answers: ["hello", "hi", "good morning"] },
+  { french: "Bonjour",          answers: ["hello", "hi", "good morning", "good day"] },
   { french: "Salut",            answers: ["hi", "hey", "hello"] },
   { french: "Bonsoir",          answers: ["good evening"] },
   { french: "Au revoir",        answers: ["goodbye", "bye"] },
@@ -267,50 +286,210 @@ const hardPhrases = [
   { french: "Mieux vaut prévenir que guérir",                     answers: ["prevention is better than cure", "an ounce of prevention is worth a pound of cure", "it's better to prevent than to cure", "it is better to prevent than to cure", "better safe than sorry"] },
 ];
 
-const seasonal2Phrases = [
-{ french: "Joyeux Halloween",                                  answers: ["happy halloween"] },
-{ french: "Des bonbons ou un sort",                           answers: ["trick or treat", "candy or a spell", "sweets or a spell"] },
-{ french: "Le fantôme",                                       answers: ["ghost", "the ghost", "a ghost"] },
-{ french: "La citrouille",                                    answers: ["pumpkin", "the pumpkin", "a pumpkin"] },
-{ french: "La sorcière",                                      answers: ["witch", "the witch", "a witch"] },
-{ french: "Le squelette",                                     answers: ["skeleton", "the skeleton", "a skeleton"] },
-{ french: "La chauve-souris",                                 answers: ["bat", "the bat", "a bat"] },
-{ french: "La maison hantée",                                 answers: ["haunted house", "the haunted house", "a haunted house"] },
-{ french: "J'ai peur",                                        answers: ["i'm scared", "i am scared", "i'm afraid", "i am afraid"] },
-{ french: "Ça fait peur",                                     answers: ["it's scary", "it is scary", "that's scary", "that is scary", "it's frightening", "it is frightening"] },
-{ french: "Il y a des toiles d'araignée partout",             answers: ["there are spiderwebs everywhere", "there are spider webs everywhere", "there are cobwebs everywhere"] },
-{ french: "Je me suis déguisé en vampire",                    answers: ["i dressed up as a vampire", "i dressed as a vampire", "i disguised myself as a vampire", "i wore a vampire costume"] },
-{ french: "Elle porte un costume de sorcière",                answers: ["she's wearing a witch costume", "she is wearing a witch costume", "she's wearing a witch's costume", "she is wearing a witch's costume"] },
-{ french: "Quel est ton déguisement?",                        answers: ["what is your costume?", "what's your costume?", "what is your costume", "what's your costume", "what are you dressed as?", "what are you dressed as"] },
-{ french: "J'ai sculpté une citrouille",                      answers: ["i carved a pumpkin", "i have carved a pumpkin", "i sculpted a pumpkin"] },
-{ french: "Raconte-moi une histoire qui fait peur",           answers: ["tell me a scary story", "tell me a story that is scary", "tell me a frightening story"] },
-{ french: "Les portes grincent dans la nuit",                 answers: ["the doors creak in the night", "the doors are creaking in the night", "the doors squeak in the night"] },
-{ french: "Ne sors pas seul la nuit d'Halloween",             answers: ["don't go out alone on halloween night", "do not go out alone on halloween night", "don't go out alone on halloween", "do not go out alone on halloween"] },
-{ french: "Les enfants sonnent à toutes les portes",          answers: ["the children ring every doorbell", "the kids ring every doorbell", "the children ring at every door", "the kids ring at every door"] },
-{ french: "Personne n'ose entrer dans la maison abandonnée",  answers: ["nobody dares to enter the abandoned house", "nobody dares enter the abandoned house", "no one dares to enter the abandoned house", "no one dares enter the abandoned house"] },
+const seasonalPhrases = [
+  { french: "Jour du Souvenir", answers: ["remembrance day", "day of remembrance"] },
+  { french: "N'oublions jamais", answers: ["lest we forget", "we will never forget", "never forget"] },
+  { french: "Le coquelicot", answers: ["the poppy", "poppy"] },
+  { french: "En mémoire de nos héros", answers: ["in memory of our heroes", "to the memory of our heroes"] },
+  { french: "Leur souvenir demeurera", answers: ["their memory shall endure", "their memory will live on"] },
+  { french: "Paix aux combattants", answers: ["peace to the combatants", "peace to the soldiers"] },
+  { french: "Aux morts de la guerre", answers: ["to the war dead", "fallen soldiers"] },
+  { french: "Le sacrifice suprême", answers: ["the ultimate sacrifice", "supreme sacrifice"] },
+  { french: "Honneur aux courageux", answers: ["honour to the brave", "honor to the brave"] },
+  { french: "Le soldat inconnu", answers: ["the unknown soldier", "unknown soldier"] },
+  { french: "Le champ de bataille", answers: ["the battlefield", "battlefield"] },
+  { french: "La tombe du soldat inconnu", answers: ["tomb of the unknown soldier"] },
+  { french: "Garder le souvenir", answers: ["keep the memory", "keep the memory alive"] },
+  { french: "Le champ d'honneur", answers: ["field of honour", "field of honor"] },
+  { french: "Service commémoratif", answers: ["memorial service"] },
+  { french: "La minute de silence", answers: ["the minute of silence", "minute of silence"] },
+  { french: "Guerres et conflits", answers: ["wars and conflicts"] },
+  { french: "S'en souvenir", answers: ["to remember it", "remembering"] },
+  { french: "La flamme éternelle", answers: ["the eternal flame", "eternal flame"] },
+  { french: "Une couronne de coquelicots", answers: ["a wreath of poppies", "poppy wreath"] },
+  { french: "Les anciens combattants", answers: ["the veterans", "veterans"] },
+  { french: "Au champ d'honneur", answers: ["on the field of honour", "on the field of honor"] },
+  { french: "Le devoir de mémoire", answers: ["duty of remembrance"] },
+  { french: "Le repos éternel", answers: ["eternal rest"] },
+  { french: "Leur nom vit à jamais", answers: ["their name lives forever", "their name lives on"] },
+  { french: "Héros de guerre", answers: ["war heroes"] },
+  { french: "Paix et liberté", answers: ["peace and freedom"] },
+  { french: "La liberté a un prix", answers: ["freedom has a price"] },
+  { french: "Défense de la patrie", answers: ["defence of the homeland", "defense of the homeland"] },
+  { french: "Les forces armées", answers: ["the armed forces", "armed forces"] },
+  { french: "Le service militaire", answers: ["military service"] },
+  { french: "Mort pour la patrie", answers: ["died for the country", "died for one's country"] },
+  { french: "La bravoure au combat", answers: ["bravery in combat", "combat bravery"] },
+  { french: "Un acte de courage", answers: ["an act of courage"] },
+  { french: "Le sacrifice de soi", answers: ["self-sacrifice"] },
+  { french: "La médaille du courage", answers: ["medal of bravery"] },
+  { french: "Porter le coquelicot", answers: ["wearing the poppy", "to wear the poppy"] },
+  { french: "Le monument aux morts", answers: ["the war memorial", "war memorial", "cenotaph"] },
+  { french: "La fin de la guerre", answers: ["the end of the war"] },
+  { french: "L'armistice de 1918", answers: ["the 1918 armistice", "armistice of 1918"] },
+  { french: "Le onzième jour du onzième mois", answers: ["the eleventh day of the eleventh month"] },
+  { french: "Onze heures du matin", answers: ["eleven in the morning", "eleven o'clock in the morning"] },
+  { french: "Les tombes militaires", answers: ["military graves", "war graves"] },
+  { french: "Le cimetière militaire", answers: ["the military cemetery", "military cemetery"] },
+  { french: "Garder la foi", answers: ["keep the faith"] },
+  { french: "La paix mondiale", answers: ["world peace"] },
+  { french: "Plus jamais ça", answers: ["never again", "no more war"] },
+  { french: "Se souvenir des sacrifices", answers: ["remembering the sacrifices", "remembering sacrifices"] },
+  { french: "La patrie reconnaissante", answers: ["the grateful homeland"] },
+  { french: "Le courage face au danger", answers: ["courage in the face of danger"] },
+  { french: "Les braves de la nation", answers: ["the nation's braves"] },
+  { french: "Le pavillon national", answers: ["the national flag"] },
+  { french: "Mettre en berne le drapeau", answers: ["to lower the flag to half-mast", "half-mast flag"] },
+  { french: "Un hommage solennel", answers: ["a solemn tribute"] },
+  { french: "Rendre hommage", answers: ["to pay tribute", "pay homage", "pay tribute"] },
+  { french: "La douleur des familles", answers: ["the families' grief", "families' sorrow"] },
+  { french: "La cicatrice de la guerre", answers: ["the scar of war"] },
+  { french: "Bâtir la paix", answers: ["building peace"] },
+  { french: "La réconciliation", answers: ["reconciliation"] },
+  { french: "Fraternité entre les peuples", answers: ["brotherhood among peoples"] },
+  { french: "La résilience", answers: ["resilience"] },
+  { french: "Les épreuves de la guerre", answers: ["the hardships of war"] },
+  { french: "La dureté des combats", answers: ["the harshness of combat", "intensity of the fighting"] },
+  { french: "Le front de l'ouest", answers: ["the western front"] },
+  { french: "Les tranchées", answers: ["the trenches", "trenches"] },
+  { french: "La boue des tranchées", answers: ["the mud of the trenches"] },
+  { french: "Le gaz moutarde", answers: ["mustard gas"] },
+  { french: "L'appel du devoir", answers: ["the call of duty"] },
+  { french: "Partir au front", answers: ["going to the front", "leaving for the front"] },
+  { french: "Dire adieu", answers: ["saying goodbye"] },
+  { french: "La lettre du front", answers: ["the letter from the front"] },
+  { french: "Le retour des soldats", answers: ["the return of the soldiers"] },
+  { french: "L'attente anxieuse", answers: ["anxious waiting"] },
+  { french: "Le deuil national", answers: ["national mourning"] },
+  { french: "Inscrire dans l'histoire", answers: ["to write in history", "make history"] },
+  { french: "L'histoire retiendra", answers: ["history will remember"] },
+  { french: "Le flambeau de la mémoire", answers: ["the torch of memory"] },
+  { french: "Transmettre le flambeau", answers: ["passing the torch"] },
+  { french: "Les jeunes générations", answers: ["the younger generations", "future generations"] },
+  { french: "Ne jamais faillir", answers: ["never fail", "never falter"] },
+  { french: "Debout pour la patrie", answers: ["standing for the homeland"] },
+  { french: "La force de l'esprit", answers: ["the strength of the spirit"] },
+  { french: "Le cœur lourd", answers: ["heavy heart"] },
+  { french: "Une larme versée", answers: ["a shed tear", "a tear shed"] },
+  { french: "Le silence respectueux", answers: ["respectful silence"] },
+  { french: "La dignité dans la mort", answers: ["dignity in death"] },
+  { french: "La liberté retrouvée", answers: ["freedom regained", "recovered freedom"] },
+  { french: "Retrouver la liberté", answers: ["to regain freedom"] },
+  { french: "L'espoir d'un monde meilleur", answers: ["the hope for a better world"] },
+  { french: "La fin des hostilités", answers: ["the end of hostilities"] },
+  { french: "La signature de la paix", answers: ["the signing of the peace"] },
+  { french: "Le traité de paix", answers: ["the peace treaty", "peace treaty"] },
+  { french: "La reconstruction", answers: ["rebuilding", "reconstruction"] },
+  { french: "Regarder vers l'avenir", answers: ["looking toward the future"] },
+  { french: "Honorer leur mémoire", answers: ["to honour their memory", "honor their memory"] },
+  { french: "Le devoir patriotique", answers: ["patriotic duty"] },
+  { french: "L'amour du pays", answers: ["love of the country", "patriotism"] },
+  { french: "La nation unie", answers: ["the united nation", "united nation"] },
+  { french: "Vivre en paix", answers: ["living in peace", "to live in peace"] },
+  { french: "Le souvenir éternel", answers: ["eternal remembrance", "eternal memory"] }
 ];
 
-const seasonalPhrases = [
-{ french: "Joyeux Halloween",                                  answers: ["happy halloween"] },
-{ french: "Des bonbons ou un sort",                           answers: ["trick or treat", "candy or a spell", "sweets or a spell"] },
-{ french: "Le fantôme",                                       answers: ["ghost", "the ghost", "a ghost"] },
-{ french: "La citrouille",                                    answers: ["pumpkin", "the pumpkin", "a pumpkin"] },
-{ french: "La sorcière",                                      answers: ["witch", "the witch", "a witch"] },
-{ french: "Le squelette",                                     answers: ["skeleton", "the skeleton", "a skeleton"] },
-{ french: "La chauve-souris",                                 answers: ["bat", "the bat", "a bat"] },
-{ french: "La maison hantée",                                 answers: ["haunted house", "the haunted house", "a haunted house"] },
-{ french: "J'ai peur",                                        answers: ["i'm scared", "i am scared", "i'm afraid", "i am afraid"] },
-{ french: "Ça fait peur",                                     answers: ["it's scary", "it is scary", "that's scary", "that is scary", "it's frightening", "it is frightening"] },
-{ french: "Il y a des toiles d'araignée partout",             answers: ["there are spiderwebs everywhere", "there are spider webs everywhere", "there are cobwebs everywhere"] },
-{ french: "Je me suis déguisé en vampire",                    answers: ["i dressed up as a vampire", "i dressed as a vampire", "i disguised myself as a vampire", "i wore a vampire costume"] },
-{ french: "Elle porte un costume de sorcière",                answers: ["she's wearing a witch costume", "she is wearing a witch costume", "she's wearing a witch's costume", "she is wearing a witch's costume"] },
-{ french: "Quel est ton déguisement?",                        answers: ["what is your costume?", "what's your costume?", "what is your costume", "what's your costume", "what are you dressed as?", "what are you dressed as"] },
-{ french: "J'ai sculpté une citrouille",                      answers: ["i carved a pumpkin", "i have carved a pumpkin", "i sculpted a pumpkin"] },
-{ french: "Raconte-moi une histoire qui fait peur",           answers: ["tell me a scary story", "tell me a story that is scary", "tell me a frightening story"] },
-{ french: "Les portes grincent dans la nuit",                 answers: ["the doors creak in the night", "the doors are creaking in the night", "the doors squeak in the night"] },
-{ french: "Ne sors pas seul la nuit d'Halloween",             answers: ["don't go out alone on halloween night", "do not go out alone on halloween night", "don't go out alone on halloween", "do not go out alone on halloween"] },
-{ french: "Les enfants sonnent à toutes les portes",          answers: ["the children ring every doorbell", "the kids ring every doorbell", "the children ring at every door", "the kids ring at every door"] },
-{ french: "Personne n'ose entrer dans la maison abandonnée",  answers: ["nobody dares to enter the abandoned house", "nobody dares enter the abandoned house", "no one dares to enter the abandoned house", "no one dares enter the abandoned house"] },
+const seasonal2Phrases = [
+  { french: "Joyeuse Action de grâce", answers: ["happy thanksgiving"] },
+  { french: "La dinde de Thanksgiving", answers: ["thanksgiving turkey", "the thanksgiving turkey"] },
+  { french: "La tarte à la citrouille", answers: ["pumpkin pie", "the pumpkin pie"] },
+  { french: "Exprimons notre gratitude", answers: ["let us express our gratitude", "expressing our gratitude"] },
+  { french: "Le dîner de famille", answers: ["family dinner", "the family dinner"] },
+  { french: "Rendons grâce", answers: ["let us give thanks", "give thanks"] },
+  { french: "La corne d'abondance", answers: ["the cornucopia", "cornucopia", "horn of plenty"] },
+  { french: "Le repas de fête", answers: ["the festive meal", "holiday feast", "feast"] },
+  { french: "La farce de la dinde", answers: ["the turkey stuffing", "stuffing", "dressing"] },
+  { french: "La sauce aux canneberges", answers: ["cranberry sauce", "the cranberry sauce"] },
+  { french: "La purée de pommes de terre", answers: ["mashed potatoes", "the mashed potatoes"] },
+  { french: "La gravy", answers: ["the gravy", "gravy"] },
+  { french: "Les patates douces", answers: ["sweet potatoes", "yams"] },
+  { french: "Le pain de maïs", answers: ["cornbread", "corNBRead"] },
+  { french: "Les choux de Bruxelles", answers: ["brussels sprouts"] },
+  { french: "La tarte aux pommes", answers: ["apple pie", "the apple pie"] },
+  { french: "La tarte aux pacanes", answers: ["pecan pie", "the pecan pie"] },
+  { french: "Le cidre de pomme", answers: ["apple cider", "the apple cider"] },
+  { french: "Le vin chaud", answers: ["mulled wine"] },
+  { french: "L'automne", answers: ["autumn", "fall"] },
+  { french: "Les feuilles d'automne", answers: ["autumn leaves", "fall leaves"] },
+  { french: "La récolte", answers: ["the harvest", "harvest"] },
+  { french: "Les fruits de la terre", answers: ["fruits of the earth", "earth's bounty"] },
+  { french: "L'abondance", answers: ["abundance", "plenty"] },
+  { french: "Être reconnaissant", answers: ["to be grateful", "being thankful"] },
+  { french: "Un sentiment de gratitude", answers: ["a feeling of gratitude"] },
+  { french: "Merci pour tout", answers: ["thanks for everything", "thank you for everything"] },
+  { french: "La bénédiction de la table", answers: ["blessing of the table", "table blessing", "saying grace"] },
+  { french: "La prière de remerciement", answers: ["thanksgiving prayer", "prayer of thanksgiving"] },
+  { french: "Se réunir en famille", answers: ["gathering with family", "family gathering"] },
+  { french: "Les proches", answers: ["loved ones", "family and friends"] },
+  { french: "Les traditions de famille", answers: ["family traditions"] },
+  { french: "La chaleur du foyer", answers: ["the warmth of the home", "home warmth"] },
+  { french: "Partager un repas", answers: ["sharing a meal", "to share a meal"] },
+  { french: "La table de fête", answers: ["the holiday table", "festive table"] },
+  { french: "La nappe blanche", answers: ["the white tablecloth", "tablecloth"] },
+  { french: "Les bougies allumées", answers: ["lit candles", "burning candles"] },
+  { french: "La décoration automnale", answers: ["autumn decoration", "fall decor"] },
+  { french: "Les citrouilles décoratives", answers: ["decorative pumpkins", "pumpkins"] },
+  { french: "Le maïs soufflé", answers: ["popcorn"] },
+  { french: "Les épis de maïs", answers: ["ears of corn", "corn on the cob"] },
+  { french: "La tourte à la citrouille", answers: ["pumpkin tart", "pumpkin pie"] },
+  { french: "Les épices d'automne", answers: ["autumn spices", "fall spices", "pumpkin spice"] },
+  { french: "La cannelle", answers: ["cinnamon"] },
+  { french: "La muscade", answers: ["nutmeg"] },
+  { french: "Le clou de girofle", answers: ["clove", "cloves"] },
+  { french: "Le gingembre", answers: ["ginger"] },
+  { french: "Le sucre brun", answers: ["brown sugar"] },
+  { french: "Le beurre frais", answers: ["fresh butter"] },
+  { french: "Le pain grillé", answers: ["toasted bread", "toast"] },
+  { french: "La confiture de fruits", answers: ["fruit jam", "jam"] },
+  { french: "Le temps des récoltes", answers: ["harvest time"] },
+  { french: "Le grenier bien rempli", answers: ["the well-stocked granary", "full barn"] },
+  { french: "La terre nourricière", answers: ["mother earth", "nourishing earth"] },
+  { french: "Le travail des champs", answers: ["farm work", "field work"] },
+  { french: "Le fermier", answers: ["the farmer", "farmer"] },
+  { french: "Le panier de fruits", answers: ["fruit basket"] },
+  { french: "Les légumes racines", answers: ["root vegetables"] },
+  { french: "Les carottes glacées", answers: ["glazed carrots"] },
+  { french: "Les haricots verts", answers: ["green beans"] },
+  { french: "La casserole de haricots verts", answers: ["green bean casserole"] },
+  { french: "La purée de patates douces", answers: ["mashed sweet potatoes", "sweet potato mash"] },
+  { french: "Les guimauves fondues", answers: ["melted marshmallows"] },
+  { french: "Le rôti de bœuf", answers: ["roast beef"] },
+  { french: "Le jambon glacé", answers: ["glazed ham"] },
+  { french: "Le chef cuisinier", answers: ["the chef", "head cook"] },
+  { french: "Préparer le festin", answers: ["preparing the feast", "to prepare the feast"] },
+  { french: "L'odeur de la cuisine", answers: ["the smell of cooking", "cooking aroma"] },
+  { french: "Le four chaud", answers: ["the hot oven", "hot oven"] },
+  { french: "Le tablier de cuisine", answers: ["kitchen apron", "apron"] },
+  { french: "Le plat principal", answers: ["the main course", "main dish"] },
+  { french: "Les hors-d'œuvre", answers: ["appetizers", "starters"] },
+  { french: "Le dessert gourmand", answers: ["the decadent dessert", "delicious dessert"] },
+  { french: "La crème fouettée", answers: ["whipped cream"] },
+  { french: "La glace à la vanille", answers: ["vanilla ice cream"] },
+  { french: "Le café chaud", answers: ["hot coffee"] },
+  { french: "Le thé fumant", answers: ["steaming tea"] },
+  { french: "Digestif après le repas", answers: ["after-dinner drink", "digestif"] },
+  { french: "Le temps de repos", answers: ["resting time", "food coma"] },
+  { french: "La sieste de l'après-midi", answers: ["afternoon nap"] },
+  { french: "Le match de football", answers: ["the football game", "football match"] },
+  { french: "Discuter autour de la table", answers: ["chatting around the table", "conversation at the table"] },
+  { french: "Les rires partagés", answers: ["shared laughter"] },
+  { french: "Le bonheur simple", answers: ["simple happiness", "simple joy"] },
+  { french: "Compter ses bénédictions", answers: ["counting one's blessings", "count your blessings"] },
+  { french: "Un cœur reconnaissant", answers: ["a grateful heart"] },
+  { french: "La paix dans le foyer", answers: ["peace in the home"] },
+  { french: "L'harmonie familiale", answers: ["family harmony"] },
+  { french: "Le pardon et l'amour", answers: ["forgiveness and love"] },
+  { french: "Se dire merci", answers: ["saying thank you to each other", "thanking each other"] },
+  { french: "La bouffée d'air frais", answers: ["breath of fresh air"] },
+  { french: "La promenade digestive", answers: ["digestive walk", "after-dinner walk"] },
+  { french: "Le ciel gris d'octobre", answers: ["october's gray sky", "gray october sky"] },
+  { french: "Les matins frais", answers: ["crisp mornings", "cool mornings"] },
+  { french: "La bise d'automne", answers: ["the autumn breeze", "fall breeze"] },
+  { french: "Le solstice d'hiver approche", answers: ["winter solstice is approaching"] },
+  { french: "La fin de l'année", answers: ["the end of the year"] },
+  { french: "Se préparer pour l'hiver", answers: ["preparing for winter"] },
+  { french: "Garder de bons souvenirs", answers: ["keeping good memories", "making good memories"] },
+  { french: "Vive l'Action de grâce", answers: ["long live thanksgiving", "hurrah for thanksgiving"] }
 ];
 
 let blitzInterval = null;
@@ -333,51 +512,73 @@ boost(soundWrong, 2);
 const soundRoll = new Audio("Sounds/dice.mp3");
 boost(soundRoll, 3);
 const soundJeopardy = new Audio('Sounds/jeopardy.mp3');
-const bgm = new Audio('Sounds/bgm.mp3');
+const bgm = new Audio('Sounds/November/bgm.mp3');
 bgm.loop = true;
 bgm.volume = 0;
-const bgm2 = new Audio('Sounds/bgm2.mp3');
+const bgm2 = new Audio('Sounds/November/bgm2.mp3');
 bgm2.loop = true;
 bgm2.volume = 0;
 
 const BGM_VOLUME = 0.2;
-const FADE_MS = 1500;
-let fadeTimer = null;
+const FADE_MS = 500;
+const fadeTimers = new WeakMap();
+const playbackRequested = new WeakMap();
 
-function fadeTo(target, onDone) {
-  clearInterval(fadeTimer);
-  const steps = 30;
+function fadeTo(target, sound, onDone) {
+  const existingTimer = fadeTimers.get(sound);
+  if (existingTimer !== undefined) {
+    clearInterval(existingTimer);
+    fadeTimers.delete(sound);
+  }
+
+  const steps = 20;
   const stepMs = FADE_MS / steps;
-  const delta = (target - bgm.volume) / steps;
+  const delta = (target - sound.volume) / steps;
   let i = 0;
-  fadeTimer = setInterval(() => {
+  if (sound.volume === target) {
+    sound.volume = target;
+    if (onDone) onDone();
+    return;
+  }
+
+  const fadeTimer = setInterval(() => {
     i++;
-    bgm.volume = Math.min(1, Math.max(0, bgm.volume + delta));
+    sound.volume = Math.min(1, Math.max(0, sound.volume + delta));
     if (i >= steps) {
       clearInterval(fadeTimer);
-      bgm.volume = target;
+      fadeTimers.delete(sound);
+      sound.volume = target;
       if (onDone) onDone();
     }
   }, stepMs);
+  fadeTimers.set(sound, fadeTimer);
 }
 
 function startBgm() {
-  bgm.play().then(() => fadeTo(BGM_VOLUME)).catch(() => {error('Unable to begin bgm playback')});
+  playbackRequested.set(bgm, true);
+  bgm.play().then(() => {
+    if (playbackRequested.get(bgm)) fadeTo(BGM_VOLUME, bgm);
+  }).catch(() => {error('Unable to begin bgm playback')});
 }
 
 function stopBgm() {
-  fadeTo(0, () => {
+  playbackRequested.set(bgm, false);
+  fadeTo(0, bgm, () => {
     bgm.pause();
     bgm.currentTime = 0;
   });
 }
 
 function startBgm2() {
-  bgm2.play().then(() => fadeTo(BGM_VOLUME)).catch(() => {error('Unable to begin bgm playback')});
+  playbackRequested.set(bgm2, true);
+  bgm2.play().then(() => {
+    if (playbackRequested.get(bgm2)) fadeTo(BGM_VOLUME, bgm2);
+  }).catch(() => {error('Unable to begin bgm playback')});
 }
 
 function stopBgm2() {
-  fadeTo(0, () => {
+  playbackRequested.set(bgm2, false);
+  fadeTo(0, bgm2, () => {
     bgm2.pause();
     bgm2.currentTime = 0;
   });
@@ -427,21 +628,6 @@ document.getElementById("userInput").focus();
 };
 
 showScore();
-applyTheme();
-
-function applyTheme() {
-  document.body.style.backgroundColor = isDark ? 'rgb(25, 25, 25)' : 'rgb(244, 243, 242)';
-  document.body.style.color = isDark ? 'white' : 'black';
-
-  document.querySelectorAll('.move-button').forEach(button => {
-    button.style.borderColor = isDark ? 'white' : 'black';
-  });
-
-  document.querySelectorAll('.reset-score-button').forEach(button => {
-    button.style.backgroundColor = isDark ? 'white' : 'black';
-    button.style.color = isDark ? 'black' : 'white';
-  });
-};
 
 function invalidErr(log) {
   document.querySelector('.submit').hidden = true;
@@ -518,15 +704,17 @@ function showGameComponents(mode) {
 function checkSeasonal(mode) {
   const activeMode = mode || currentMode;
 
-  // 1. Check which screens are visible
   const isGameVisible = !document.getElementById("game").hidden;
   const isResultVisible = !document.getElementById("result").hidden;
 
-  // 2. Determine if overlay should be active (Seasonal Mode + Game OR Result screen)
   const shouldShowOverlay = activeMode === 'seasonal' && (isGameVisible || isResultVisible);
+  const shouldShowOverlay2 = activeMode === 'seasonal2' && (isGameVisible || isResultVisible);
 
+  document.body.classList.remove('halloween');
   if (shouldShowOverlay) {
     document.body.classList.add('seasonal');
+    document.body.classList.remove('seasonal2');
+    stopBgm2();
     document.getElementById('mute').hidden = false;
 
     document.querySelectorAll('.move-button, button, button[type="game"]').forEach(b => {
@@ -544,18 +732,10 @@ function checkSeasonal(mode) {
     if (!muted && bgm.paused) {
       startBgm();
     }
-    } else {
-    document.body.classList.remove('halloween');
-    document.querySelectorAll('.move-button, button, button[type="game"]').forEach(b => b.classList.remove('seasonal'));
-    
-    document.getElementById('mute').hidden = true;
-    stopBgm();
-  }
-  const shouldShowOverlay2 = activeMode === 'seasonal2' && (isGameVisible || isResultVisible);
-
-  if (shouldShowOverlay2) {
-    //////////////////////////// Changes body class
+    } else if (shouldShowOverlay2) {
     document.body.classList.add('seasonal2');
+    document.body.classList.remove('seasonal');
+    stopBgm();
     document.getElementById('mute').hidden = false;
 
     document.querySelectorAll('.move-button, button, button[type="game"]').forEach(b => {
@@ -574,10 +754,12 @@ function checkSeasonal(mode) {
       startBgm2();
     }
     } else {
+    document.body.classList.remove('seasonal');
     document.body.classList.remove('seasonal2');
     document.querySelectorAll('.move-button, button, button[type="game"]').forEach(b => b.classList.remove('seasonal2'));
     
     document.getElementById('mute').hidden = true;
+    stopBgm();
     stopBgm2();
   }
 }
@@ -636,13 +818,10 @@ async function startGame(mode = currentMode) {
   if (mode === 'seasonal') {
     await getServerTime();
     document.querySelector('.seasonalOverlay').hidden = false;
-    document.querySelector('.fillerTop').hidden = false;
   } else if (mode === 'seasonal2') {
     await getServerTime();
     document.querySelector('.seasonal2Overlay').hidden = false;
-    document.querySelector('.fillerTop').hidden = false;
   } else { 
-    document.querySelector('.fillerTop').hidden = true;
     document.body.classList.remove('seasonal');
   }
 
@@ -654,15 +833,19 @@ async function startGame(mode = currentMode) {
     soundJeopardy.play();
   }
 
-  let allowed = mode !== 'seasonal';
+  let allowed = mode !== 'seasonal' && mode !== 'seasonal2';
   if (mode === 'seasonal' && serverTime !== null || mode === 'seasonal2' && serverTime !== null) {
+    document.getElementById('error').textContent = 'Loading...';
+    document.getElementById('error').hidden = false;
     allowed = serverTime.getFullYear() < 2027 && serverTime.getMonth() === 10;
+    document.getElementById('error').hidden = true;
   }
 
   if (!allowed) {
     error('This mode is unavailable');
     return;
-  };
+  } else {
+  }
   showGameComponents(mode);
   phrases = phrasesByMode[mode];
   localStorage.setItem('frenchGamemode', JSON.stringify(mode));
@@ -834,12 +1017,8 @@ function checkAnswer() {
 
 function showAnswers() {
   const userInput = document.getElementById("userInput").value;
-  if (current.answers.length < 2) {
     document.querySelector(".correct-answer").textContent =
-    `PHRASE: ${current.french}\nYOUR ANSWER: ${userInput}\nCORRECT ANSWERS: ${current.answers.join(" / ")}`;} else {
-      document.querySelector(".correct-answer").textContent =
-    `PHRASE: ${current.french}\nYOUR ANSWER: ${userInput}\nCORRECT ANSWER: ${current.answers}`;
-    };
+    `PHRASE: ${current.french}\nYOUR ANSWER: ${userInput}\nCORRECT ANSWERS: ${current.answers.join(" / ")}`;
   document.getElementById("userInput").value = '';
 }
 
@@ -904,19 +1083,6 @@ function startFade(element, ms) {
   }, ms);
 }
 
-function checkHidden(srpt) {
-  console.log(document.querySelector('scoreGroup transitionOut').classList);
-  /*if (document.querySelector('scoreGroup transitionOut').classList === 'scoreGroup transitionOut') {
-    if (srpt === 'resetAllScore') {
-      console.log('if');
-      //resetAllScore();
-    } else {
-      console.log('else');
-      //score.wins = 0; score.losses = 0; updateScore();
-    }
-  }*/
-}
-
 let speechRate = load('speechRate', 0.9);
 let blitzStartTime = 0;
 
@@ -971,3 +1137,5 @@ function showBugs() {
   document.getElementById('abtErrors').hidden = true;
   document.getElementById('bugs').hidden = false;
 }
+
+document.getElementById('error').hidden = true
