@@ -1,5 +1,19 @@
+:root {
+  --background-color: rgb(25, 25, 25);
+  --text-color: white;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --background-color: rgb(244, 243, 242);
+    --text-color: black;
+  }
+}
+
 body {
   font: normal 16px verdana;
+  color: var(--text-color);
+  background-color: var(--background-color);
 }
 
 body.seasonal main, body.seasonal2 main {
@@ -7,13 +21,18 @@ body.seasonal main, body.seasonal2 main {
   margin: 0 auto;
 }
 
-.fillerTop {
-  padding: calc(0px + 4vw);
+body.seasonal2 main {
+  padding-top: clamp(32px, 6vw, 80px);
+}
+
+body.seasonal main {
+  padding-top: clamp(32px, 10vw, 80px);
 }
 
 #mute {
-  right: 85px;
   position: fixed;
+  right: 85px;
+  height: fit-content;
 }
 
 button {
@@ -30,13 +49,13 @@ button {
 }
 
 button:hover {
-  filter: drop-shadow(2px 3px 0 #4caf4f) brightness(1.1);
+  filter: drop-shadow(2px 3px 0 #4CAF50) brightness(1.1);
   z-index: 9999;
 }
 
 button:active {
   transform: translate(2px, 2px);
-  filter: drop-shadow(0 1px 0 #4caf4f);
+  filter: drop-shadow(0 1px 0 #4CAF50);
 }
 
 input[type="text"] {
@@ -223,7 +242,7 @@ main {
   .reset-score2 {
     left: 45px;
   }
-  .filler{
+  .filler {
   padding: calc(0px + 15vw);
   }
   body.seasonal #sOverlay {
@@ -232,8 +251,20 @@ main {
   body.seasonal #sOverlay-v {
     display: block;
   }
+  body.seasonal2 #sOverlay2 {
+    display: none;
+  }
+  body.seasonal2 #sOverlay2-v {
+    display: block;
+  }
+  body.seasonal2 main {
+    max-width: 75%;
+  }
+  body.seasonal2 main {
+    max-width: 75%;
+  }
   body.seasonal main {
-    max-width: 95%;
+    padding-top: calc(0px + 20vw);
   }
 }
 
@@ -259,7 +290,6 @@ main {
     width: auto;
     min-width: 0;
   }
-
   #mute {
   position: static;
   }
@@ -278,6 +308,8 @@ main {
   transform: translate(-50%, -50%);
   text-align: center;
   font: bold 30px monospace;
+  z-index: 99999;
+  mix-blend-mode: difference;
 }
 
 .seasonalResult {
