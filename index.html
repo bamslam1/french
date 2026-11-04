@@ -10,23 +10,39 @@
   </head>
   <body>
     <noscript>
-  <p>
-    <strong>JavaScript is required.</strong> This site requires JavaScript to run.
-    Please enable it in your browser settings, then reload the page.
-    If the problem persists, try a current version of a modern browser such as
-    <a href="https://www.google.com/chrome/" target="_blank" rel="noopener noreferrer">Google Chrome</a>.
-    If the problem persists after updating to the newest version, please visit
-    <a href="https://github.com/bamslam1/French/issues">https://github.com/bamslam1/French/issues</a> to report a bug.
-  </p>
+      <style>
+        .js-off {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          text-align: center;
+          font: bold 20px sans-serif;
+          z-index: 99999;
+          display: fixed !important;
+        }
+        .page-content {
+          display: none !important;
+        }
+      </style>
+      <p class="js-off">
+        <strong>JavaScript is required.</strong> This site requires JavaScript to run.
+        Please enable it in your browser settings, then reload the page.
+        If the problem persists, try a current version of a modern browser such as
+        <a href="https://www.google.com/chrome/" target="_blank" rel="noopener noreferrer">Google Chrome</a>.
+        If the problem persists after updating to the newest version, please visit
+        <a href="https://github.com/bamslam1/French/issues">https://github.com/bamslam1/French/issues</a> to report a bug.
+      </p>
     </noscript>
-    <img src="https://ps.w.org/svisciano-light-dark-theme-mode/assets/icon-256x256.png?rev=3535289" onclick="isDark = !isDark; applyTheme();" alt="Change Theme Button" class="theme-button" tabindex="0" onkeypress="if (event.key === 'Enter') {isDark = !isDark; applyTheme();};">
+    <div class="page-content">
+      <img src="Images\theme.png" onclick="isDark = !isDark; applyTheme();" alt="Change Theme Button" class="theme-button" tabindex="0" onkeypress="if (event.key === 'Enter') {isDark = !isDark; applyTheme();};">
 
     <!--<div class="scoreGroup transitionOut" onmouseenter="mouseIn = true; setTimeout(() => {}, 3000); if (mouseIn === true) {startFade(this, 2000);};" onmouseleave="mouseIn = false; this.classList.remove('hidden');">-->
     <p class="score">Loading...</p>
     <button class="reset-score" onclick="score.wins = 0; score.losses = 0; updateScore();">Reset Score</button>
     <button class="reset-score2" onclick="resetAllScore(); console.log(this);">Reset All Score</button>
     <a href="https://github.com/bamslam1/French/issues" target="_blank" rel="noopener noreferer" class="bott-right"><button title="Press new issue to create a report">Report A Bug</button></a>
-    <p id="error" hidden>Error</p>
+    <p id="error">Loading...</p>
     <p class="ver">v10.6.5</p>
     <main>
       <div id="startScreen">
@@ -60,15 +76,14 @@
       </div>
 
       <div id="game" hidden>
-        <img src="Images\remember-overlay.png" class="overlay seasonalOverlay" id="sOverlay" hidden>
-        <img src="Images\remember-overlay-vertical.png" class="overlay seasonalOverlay-v" id="sOverlay-v" hidden>
-        <img src="Images\thanksgiving-overlay.png" class="overlay seasonal2Overlay" id="sOverlay2" hidden>
-        <img src="Images\remember-overlay-vertical.png" class="overlay seasonal2Overlay-v" id="sOverlay2-v" hidden>
-        <div class="fillerTop"></div>
-        <button type="game" class="back" onclick="stopBgm(); gamemode();">Back</button>
+        <img src="Images\November\remember-overlay.png" class="overlay seasonalOverlay" id="sOverlay" hidden>
+        <img src="Images\November\remember-vertical.png" class="overlay seasonalOverlay-v" id="sOverlay-v" hidden>
+        <img src="Images\November\thanksgiving-overlay.png" class="overlay seasonal2Overlay" id="sOverlay2" hidden>
+        <img src="Images\November\thanksgiving-vertical.png" class="overlay seasonal2Overlay-v" id="sOverlay2-v" hidden>
+        <button type="game" class="back" onclick="gamemode();">Back</button>
         <button type="game" id="mute" onclick="toggleMute();">🔊</button>
         <p id="timer-display">loading...</p>
-        <span lang="fr" translate="no"><p class="phrase">
+        <span lang="fr" translate="no"><p class="phrase" style="z-index: 99998; align-items: center; justify-content: center; display: flex; font-size: 2rem; text-align: center;">
         Loading...
         </p>
         <div class="listenControls">
@@ -101,12 +116,6 @@
       <div id="result" hidden>
         <button class="back" onclick="startGame();">Back</button>
         <img src="https://media.tenor.com/Wlu-ZlnW7QYAAAAj/no-dislike.gif" class="wrongGif" alt="Incorrect GIF" hidden>
-        <img src="Images/halloween-lose-overlay.gif" class="sznWrongGif seasonalResult transitionOut" alt="Incorrect GIF" hidden>
-
-        <img src="https://assets.dochipo.com/editor/animations/confetti/854a56df-cb2c-478c-ab6d-967ea2dee737.gif" class="rightGif" alt="Correct GIF" hidden>
-        <img src="Images/halloween-win-overlay.gif" class="sznRightGif seasonalResult transitionOut" alt="Incorrect GIF" hidden>
-        <img src="Images\halloween-overlay.png" class="overlay" id="overlay" hidden>
-        <img src="Images\halloween-overlay-vertical.png" class="overlay" id="overlay-v" hidden>
         <p class="result-message space"></p>
         <p class="correct-answer space"></p>
         <button id="speech" onclick="speak();">🔊 Listen</button>
@@ -155,6 +164,7 @@
 
       <div class="filler"></div>
     </main>
+    </div>
     <script src="Scripts/script.js" defer></script>
   </body>
 </html>
