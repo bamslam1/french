@@ -5,7 +5,7 @@
     <meta name="google" content="notranslate">
     <title>FrançaisFlash</title>
     <link rel="stylesheet" href="Styles/style.css">
-    <link id="favicon" rel="icon" type="image/png" href="Images/favicon-icon.ico" size="any">
+    <link id="favicon" rel="icon" type="image/png" href="Images\November\favicon-thanksgiving.ico" size="any">
     <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
   <body>
@@ -31,24 +31,29 @@
         If the problem persists, try a current version of a modern browser such as
         <a href="https://www.google.com/chrome/" target="_blank" rel="noopener noreferrer">Google Chrome</a>.
         If the problem persists after updating to the newest version, please visit
-        <a href="https://github.com/bamslam1/French/issues">https://github.com/bamslam1/French/issues</a> to report a bug.
+        <a href="https://github.com/bamslam1/french/issues">https://github.com/bamslam1/french/issues</a> to report a bug.
       </p>
     </noscript>
-    <div class="page-content">
-      <img src="Images\theme.png" onclick="isDark = !isDark; applyTheme();" alt="Change Theme Button" class="theme-button" tabindex="0" onkeypress="if (event.key === 'Enter') {isDark = !isDark; applyTheme();};">
+    
+    <input type="radio" name="theme-group" id="force-dark" class="theme-trigger">
+    <input type="radio" name="theme-group" id="force-light" class="theme-trigger">
 
+    <label for="force-dark" class="custom-button btn-dark btn">Switch to Dark Mode</label>
+    <label for="force-light" class="custom-button btn-light btn">Switch to Light Mode</label>
+
+    <p class="ver">v10.6.5</p>
+    <div class="page-content">
     <!--<div class="scoreGroup transitionOut" onmouseenter="mouseIn = true; setTimeout(() => {}, 3000); if (mouseIn === true) {startFade(this, 2000);};" onmouseleave="mouseIn = false; this.classList.remove('hidden');">-->
     <p class="score">Loading...</p>
     <button class="reset-score" onclick="score.wins = 0; score.losses = 0; updateScore();">Reset Score</button>
     <button class="reset-score2" onclick="resetAllScore(); console.log(this);">Reset All Score</button>
-    <a href="https://github.com/bamslam1/French/issues" target="_blank" rel="noopener noreferer" class="bott-right"><button title="Press new issue to create a report">Report A Bug</button></a>
+    <a href="https://github.com/bamslam1/french/issues" target="_blank" rel="noopener noreferer" class="bott-right"><button title="Press new issue to create a report">Report A Bug</button></a>
     <p id="error">Loading...</p>
-    <p class="ver">v10.7.6</p>
     <main>
       <div id="startScreen">
         <h1 class="title">FrançaisFlash</h1>
         <p>
-          This game is designed to help you practice your French skills by providing a French phrase or word and you answer them in the input field. Your score is saved by each gamemode. Reloading the site will bring your most recently played gamemode's score up. Reloading the site will not result in a free phrase reroll (Patched in <a href="https://github.com/bamslam1/French/releases#release-v5.2.3" target="_blank" rel="noopener noreferer">v5.2.3</a>).<br><br>Please note that rerolling the phrase will take off one point.
+          This game is designed to help you practice your French skills by providing a French phrase or word and you answer them in the input field. Your score is saved by each gamemode. Reloading the site will bring your most recently played gamemode's score up. Reloading the site will not result in a free phrase reroll (Patched in <a href="https://github.com/bamslam1/french/releases#release-v5.2.3" target="_blank" rel="noopener noreferer">v5.2.3</a>).<br><br>Please note that rerolling the phrase will take off one point.
         </p>
         <a href="https://bamslam1.github.io/my-projects" target="_blank" rel="noopener noreferer"><button>Other Projects</button></a>
         <button data-page="game" onclick="pressedStartCount++; gamemode();">Start Game</button>
@@ -64,15 +69,17 @@
         <button onclick="startGame('medium');">Medium</button>
         <button onclick="startGame('hard');">Hard</button>
         <button onclick="startGame('all');">All</button>
-        <button onclick="startGame('blitz');">Blitz</button>
+        <button onclick="/*tutorial();*/startGame('blitz');">Blitz</button>
         <button onclick="if (customPhrases === allPhrases) {custom();} else if (customPhrases.length === 0) {console.log('Cannot Play With No Phrases'); custom();} else {startGame('custom');};">Custom</button>
         <br><br>
         <h2>Limited Time</h1>
-        <button onclick="startGame('seasonal');" title="This gamemode will be removed at November 30st">🌹 Remeberance 🌹</button>
-        <button onclick="startGame('seasonal2');" title="This gamemode will be removed at November 30st">🦃 Thanksgiving 🦃</button>
+        <button onclick="startGame('seasonal');" title="This gamemode will be removed on November 30st">🌹 Remeberance 🌹</button>
+        <button onclick="startGame('seasonal2');" title="This gamemode will be removed on November 30st">🦃 Thanksgiving 🦃</button>
+        <button onclick="startGame('seasonal3')">GTA VI</button>
         <br><br>
         <p class="allScore space"></p>
         <button class="reset-score-gamemode" onclick="resetAllScore();">Reset All Score</button>
+        <br><br><br><br>
       </div>
 
       <div id="game" hidden>
@@ -82,7 +89,7 @@
         <img src="Images\November\thanksgiving-vertical.png" class="overlay seasonal2Overlay-v" id="sOverlay2-v" hidden>
         <button type="game" class="back" onclick="gamemode();">Back</button>
         <button type="game" id="mute" onclick="toggleMute();">🔊</button>
-        <p id="timer-display">loading...</p>
+        <p id="timer-display">Loading...</p>
         <span lang="fr" translate="no"><p class="phrase" style="z-index: 99998; align-items: center; justify-content: center; display: flex; font-size: 2rem; text-align: center;">
         Loading...
         </p>
@@ -142,7 +149,7 @@
           <br>
           <b>a bug has occurred in the proccess of playing the bgm file.</b></p>
           <br><br>
-          If the game freezes, check the <a href="https://google.com/search?q=how+to+open+web+browser+console+mobile+and+desktop" rel="noreferer" target="blank_" title="Click me!">console</a> and take a screenshot or copy the text into a <a href="https://github.com/bamslam1/French/issues" rel="noreferer" target="blank_" title="Click me then press new issue to create a bug report.">bug report.</a>
+          If the game freezes, check the <a href="https://google.com/search?q=how+to+open+web+browser+console+mobile+and+desktop" rel="noreferer" target="blank_" title="Click me!">console</a> and take a screenshot or copy the text into a <a href="https://github.com/bamslam1/french/issues" rel="noreferer" target="blank_" title="Click me then press new issue to create a bug report.">bug report.</a>
         </p>
       </div>
 
@@ -150,15 +157,17 @@
         <button onclick="showStartScreen();">Back</button>
         <h2>Bugs</h2>
         <p>
-          1. Halloween effects not being applied when using listen mode.
+          1. When in custom mode, adding only two phrases causes only the first one to be displayed every round.
           <br><br>
+          If you find any more bugs, please report them at <a href="https://github.com/bamslam1/french/issues" rel="noreferer" target="blank_" title="Click me then press new issue to create a bug report.">https://github.com/bamslam1/french/issues</a> and if possible, take a screenshot.
+          <!--<br><br>
           2. Overlay not applying when playing the halloween mode.
           <br><br>
           3. Persistant loading screen when Halloween gamemode button clicked and then clicking other gamemode. This can happen if you set your wifi speed (using Chrome DevTools network tab) and quickly pressing another gamemode. Your gamemode won't get switched if this happens.
           <br><br>
           4. The button effects don't apply when using the halloween listen only mode.
           <br><br>
-          <b>All of these bugs are currently being looked into and will be fixed as soon as possible.</b>
+          <b>All of these bugs are currently being looked into and will be fixed as soon as possible.</b>-->
         </p>
       </div>
 
