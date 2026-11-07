@@ -1,19 +1,55 @@
 :root {
-  --background-color: rgb(25, 25, 25);
-  --text-color: white;
+  --bg-color: rgb(244, 243, 242);
+  --text-color: rgb(25, 25, 25);
+  --show-light-btn: none;
+  --show-dark-btn: inline-block;
 }
 
-@media (prefers-color-scheme: light) {
+@media (prefers-color-scheme: dark) {
   :root {
-    --background-color: rgb(244, 243, 242);
-    --text-color: black;
+    --bg-color: rgb(25, 25, 25);
+    --text-color: rgb(244, 243, 242);
+    --show-light-btn: inline-block;
+    --show-dark-btn: none;
   }
 }
+
+:root:has(#force-dark:checked) {
+  --bg-color: rgb(25, 25, 25);
+  --text-color: rgb(244, 243, 242);
+  --show-light-btn: inline-block;
+  --show-dark-btn: none;
+}
+
+:root:has(#force-light:checked) {
+  --bg-color: rgb(244, 243, 242);
+  --text-color: rgb(25, 25, 25);
+  --show-light-btn: none;
+  --show-dark-btn: inline-block;
+}
+
+.theme-trigger {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.custom-button {
+  display: inline-block;
+  background-color: #0076ff;
+  color: white;
+  cursor: pointer;
+  user-select: none;
+}
+
+.btn-dark { display: var(--show-dark-btn); }
+.btn-light { display: var(--show-light-btn); }
 
 body {
   font: normal 16px verdana;
   color: var(--text-color);
-  background-color: var(--background-color);
+  background-color: var(--bg-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body.seasonal main, body.seasonal2 main {
@@ -35,7 +71,7 @@ body.seasonal main {
   height: fit-content;
 }
 
-button {
+button, .btn {
   font: bold 14px verdana;
   padding: 7.5px 15px;
   background-color: #4CAF50;
@@ -48,12 +84,12 @@ button {
   transition: transform 0.1s;
 }
 
-button:hover {
+button:hover, .btn:hover {
   filter: drop-shadow(2px 3px 0 #4CAF50) brightness(1.1);
   z-index: 9999;
 }
 
-button:active {
+button:active, .btn:active {
   transform: translate(2px, 2px);
   filter: drop-shadow(0 1px 0 #4CAF50);
 }
@@ -101,16 +137,8 @@ input[type="range"]:active {
   font: bold 20px verdana;
   pointer-events: none;
   z-index: 9999;
-}
-
-.theme-button {
-  width: 50px;
-  height: 50px;
-  bottom: 10px;
-  right: 10px;
-  position: fixed;
-  cursor: pointer;
-  z-index: 9999;
+  color: #ffffff;
+  mix-blend-mode: difference;
 }
 
 .wrongGif {
@@ -181,12 +209,20 @@ input[type="range"]:active {
 
 .ver {
   font: bold 12px monospace;
-  -webkit-text-stroke: 0.5px black;
-  color: rgb(255, 255, 255);
+  color: #ffffff;
+  mix-blend-mode: difference;
   position: sticky;
+  transition: background-color 0.3s ease, color 0.3s ease;
   top: 0px;
   z-index: 9999;
   pointer-events: none;
+}
+
+.btn {
+  bottom: 20px;
+  left: 20px;
+  position: fixed;
+  z-index: 9999;
 }
 
 .allScore {
@@ -217,7 +253,7 @@ main {
 @media (max-width: 600px) {
   body { padding: 0 12px; }
 
-  button {
+  button, .btn {
     padding: 10px 16px; margin: 4px 0;
   }
   input[type="text"] {
