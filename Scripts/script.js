@@ -1,22 +1,3 @@
-let isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-function applyTheme() {
-  if (!isDark.setManually) {
-  document.body.style.backgroundColor = isDark ? 'rgb(25, 25, 25)' : 'rgb(244, 243, 242)';
-  document.body.style.color = isDark ? 'white' : 'black';
-
-  document.querySelectorAll('.move-button').forEach(button => {
-    button.style.borderColor = isDark ? 'white' : 'black';
-  });
-
-  document.querySelectorAll('.reset-score-button').forEach(button => {
-    button.style.backgroundColor = isDark ? 'white' : 'black';
-    button.style.color = isDark ? 'black' : 'white';
-  });
-  }
-  isDark.setManually = true;
-}
-
 const msg = document.querySelector(".phrase");
 
 function load(key, fallback) {
@@ -24,20 +5,35 @@ function load(key, fallback) {
   catch { return fallback; }
 }
 
-let serverTime = null;
+let serverCalendar = null;
 
 async function getServerTime() {
-  document.getElementById('error').textContent = 'Loading...';
-  document.getElementById('error').hidden = false;
+  const l = document.getElementById('error')
+  l.hidden = false;
+  l.textContent = 'Loading...'
   try {
-    const res = await fetch(location.href, { method: 'HEAD', cache: 'no-store' });
-    serverTime = new Date(res.headers.get('Date'));
-  } catch {
-    serverTime = null;
-    error('Cannot fetch date');
+    const response = await fetch('https://timeapi.io/api/Time/current/zone?timeZone=America/Whitehorse');
+    
+    if (!response.ok) throw new Error("API request failed");
+    
+    const data = await response.json();
+
+    const year = data.year;
+    const month = String(data.month).padStart(2, '0');
+    const day = String(data.day).padStart(2, '0');
+    
+    const hours = String(data.hour).padStart(2, '0');
+    const minutes = String(data.minute).padStart(2, '0');
+
+    serverCalendar = [year, month, day, hours, minutes];
+  } catch (err) {
+    serverCalendar = null;
+    error("Could not fetch remote server time.");
   }
-  document.getElementById('error').hidden = true;
+  l.hidden = true;
 }
+
+getServerTime();
 
 let prevFrench = null;
 
@@ -492,6 +488,196 @@ const seasonal2Phrases = [
   { french: "Vive l'Action de grâce", answers: ["long live thanksgiving", "hurrah for thanksgiving"] }
 ];
 
+const seasonal3Phrases = [
+  { french: "Le retour de Vice City", answers: ["vice city return", "welcome back to vice city"] },
+  { french: "Jason et Lucia", answers: ["jason and lucia", "the main characters"] },
+  { french: "L'etat de Leonida", answers: ["leonida", "state of leonida"] },
+  { french: "Le club de strip-tease de Vice City", answers: ["vice city strip club", "strip club"] },
+  { french: "La parodie des Florida Keys", answers: ["the keys", "florida keys parody"] },
+  { french: "Le flux en direct sur les reseaux sociaux", answers: ["live streaming", "social media live stream"] },
+  { french: "Les rassemblements de la secte de la boue", answers: ["mud cult", "mud pluggers"] },
+  { french: "Un alligator dans un magasin d'alimentation", answers: ["alligator in store", "store gator"] },
+  { french: "L'entrainement sur la plage de Vice City", answers: ["muscle beach", "vice city workout"] },
+  { french: "Le rassemblement de voitures", answers: ["street takeover", "car meet"] },
+  { french: "La fuite apres un braquage de magasin", answers: ["convenience store robbery", "hold up"] },
+  { french: "Une course-poursuite policiere a haute vitesse", answers: ["police pursuit", "cop chase"] },
+  { french: "L'horizon de Vice City au cruscule", answers: ["vice city skyline", "sunset view"] },
+  { french: "Les lumieres au neon d'Ocean Drive", answers: ["ocean drive neon", "ocean drive"] },
+  { french: "Le spectacle d'hydraulique pour lowrider", answers: ["lowrider hop", "hydraulics"] },
+  { french: "Le scandale du flic corrompu", answers: ["corrupt officer", "dirty cop"] },
+  { french: "La cachette de drogue du cartel", answers: ["drug stash", "cartel house"] },
+  { french: "L'operation d'infiltration secrete", answers: ["sting operation", "undercover cop"] },
+  { french: "La video virale de farceur en streaming", answers: ["viral prank", "streamer prank"] },
+  { french: "La fusillade a la station-service", answers: ["gas station fight", "fuel pump explosion"] },
+  { french: "Le conteneur maritime du port de Vice City", answers: ["shipping containers", "port heist"] },
+  { french: "La fete sur un yacht prive", answers: ["yacht party", "boat celebration"] },
+  { french: "Le bateau a moteur dans le marais", answers: ["swamp boat chase", "airboat ride"] },
+  { french: "L'equipe de cascadeurs urbains en moto cross", answers: ["bike life", "street stunt crew"] },
+  { french: "La promenade nocturne sur l'autoroute eclairee au neon", answers: ["night drive", "highway neon"] },
+  { french: "Le bureau de cautionnement", answers: ["bail bonds", "bounty hunting"] },
+  { french: "La negotiation au preteur sur gages", answers: ["pawn shop", "sell stolen goods"] },
+  { french: "L'atelier de peinture automobile personnalisee", answers: ["custom spray shop", "ls customs style"] },
+  { french: "L'atelier clandestin de voitures volees", answers: ["chop shop", "stripping cars"] },
+  { french: "La ligne de depart d'une course de rue de minuit", answers: ["street race", "drag race start"] },
+  { french: "L'helicoptere de la police de Vice City", answers: ["noose helicopter", "police chopper"] },
+  { french: "L'assaut tactique de l'equipe SWAT", answers: ["swat raid", "tactical entry"] },
+  { french: "La tentative d'evasion de prison", answers: ["prison break", "penitentiary escape"] },
+  { french: "Le tableau blanc de planification de braquage", answers: ["heist board", "planning the score"] },
+  { french: "Le percage de coffre-fort dans la planque", answers: ["crack the safe", "stealing cash"] },
+  { french: "Le marchand d'armes du marche noir", answers: ["gun runner", "illegal weapons"] },
+  { french: "Le reseau de faux papiers d'identite", answers: ["fake id", "counterfeit operation"] },
+  { french: "La presse a imprimer de la fausse monnaie", answers: ["money printer", "counterfeit cash"] },
+  { french: "L'intersection de la guerre des gangs", answers: ["turf war", "gang territory"] },
+  { french: "L'embuscade d'un cartel rival", answers: ["cartel ambush", "drive by attack"] },
+  { french: "L'installation de la planque du piratage", answers: ["hacker den", "surveillance screens"] },
+  { french: "Le siege social d'une arnaque aux cryptomonnaies", answers: ["crypto scam", "rug pull operation"] },
+  { french: "Le penthouse de luxe surplombant la plage", answers: ["luxury penthouse", "ocean view condo"] },
+  { french: "La planque dans un motel деlabre", answers: ["motel hideout", "cheap motel room"] },
+  { french: "L'evasion dans une voiture de patrouille volee", answers: ["stolen cop car", "undercover cruiser"] },
+  { french: "Le braquage d'un poste de peage sur l'autoroute", answers: ["toll booth heist", "highway robbery"] },
+  { french: "La fusillade a l'interieur du mega centre commercial", answers: ["mall shootout", "shopping center chaos"] },
+  { french: "Le point de vue du tireur d'elite sur le toit", answers: ["rooftop sniper", "overwatch position"] },
+  { french: "La transaction de drogue qui tourne mal dans une allee", answers: ["bad drug deal", "alley ambush"] },
+  { french: "La course-poursuite en bateau rapide", answers: ["boat escape", "water pursuit"] },
+  { french: "Le saut en parachute sur un camion en mouvement", answers: ["truck parachute", "air drop"] },
+  { french: "Le saut cascade par-dessus un viaduc d'autoroute", answers: ["stunt jump", "epic jump"] },
+  { french: "Le raid sur une partie de poker clandestine", answers: ["illegal poker game", "high stakes poker"] },
+  { french: "La bagarre avec les bons du salon VIP", answers: ["club bouncer fight", "vip brawl"] },
+  { french: "Le chaos d'une fete au bord de la piscine sur le toit", answers: ["pool party", "rooftop chaos"] },
+  { french: "Le tag de graffiti d'un gang rival", answers: ["gang tag", "territory marking"] },
+  { french: "Le detournement d'un semi-remorque vole", answers: ["semi truck hijack", "rig robbery"] },
+  { french: "Le braquage d'un transport de fonds blind", answers: ["armored truck robbery", "securicor heist"] },
+  { french: "L'intrusion sur la piste de l'aeroport international", answers: ["airport breach", "runway chase"] },
+  { french: "Le detournement d'un avion cargo en plein vol", answers: ["cargo plane heist", "mid air boarding"] },
+  { french: "L'infiltration de la base militaire", answers: ["fort zancudo style base", "military break in"] },
+  { french: "Le vol d'un helicoptere d'attaque", answers: ["military helicopter theft", "stealing a chopper"] },
+  { french: "Le grabuge d'un char d'assaut sur Ocean Drive", answers: ["tank rampage", "military tank chaos"] },
+  { french: "La course de jet-ski a travers les Keys", answers: ["jet ski race", "watercraft sprint"] },
+  { french: "La plongee sous-marine a la recherche de tresor englouti", answers: ["sunken treasure", "deep sea diving"] },
+  { french: "L'attaque de requin dans la baie", answers: ["shark attack", "ocean predator"] },
+  { french: "L'effraction dans une ferme d'alligators", answers: ["gator farm", "reptile enclosure"] },
+  { french: "La course d'hydroglisseurs dans les marais", answers: ["swamp race", "airboat championship"] },
+  { french: "Le braquage d'un restaurant de bord de route", answers: ["diner robbery", "classic hold up"] },
+  { french: "La riposte du caissier du magasin d'alimentation", answers: ["store clerk fights back", "counter robbery"] },
+  { french: "L'effraction dans la fourriere municipale", answers: ["impound lot heist", "stealing impounded cars"] },
+  { french: "L'evasion du broyeur a la decharge", answers: ["junkyard escape", "car crusher"] },
+  { french: "Le sabotage provoquant une panne de courant a la centrale", answers: ["grid sabotage", "power blackout"] },
+  { french: "Le piratage pour interrompre la diffusion television", answers: ["broadcast hack", "tv signal takeover"] },
+  { french: "Le piratage de surveillance sur une tour cellulaire", answers: ["wiretap", "cell tower hack"] },
+  { french: "Le raid sur la planque de protection des temoins", answers: ["witness protection", "safe house attack"] },
+  { french: "L'infiltration du tribunal federal", answers: ["courthouse break in", "legal archives heist"] },
+  { french: "Le vol de la salle des scelles au poste de police", answers: ["evidence room heist", "stealing seized goods"] },
+  { french: "L'effraction au siege de campagne du maire", answers: ["political scandal", "campaign office break in"] },
+  { french: "Le bunker souterrain secret", answers: ["underground bunker", "secret facility"] },
+  { french: "L'exploration d'un silo a missiles abandonne", answers: ["missile silo", "nuclear bunker"] },
+  { french: "Le largage de contrebande dans les Everglades", answers: ["everglades drop", "swamp drop off"] },
+  { french: "La confrontation avec la police suite a un exces de vitesse", answers: ["traffic stop", "police warning"] },
+  { french: "Les consequences d'un accident en conduisant en etat d'ivresse", answers: ["dui crash", "car accident"] },
+  { french: "La transaction de drogue au coin de la rue", answers: ["corner dealing", "street corner drop"] },
+  { french: "La voie d'evasion par le parkour sur les toits", answers: ["rooftop escape", "parkour chase"] },
+  { french: "La course-poursuite en bateau dans les canaux de style Venise", answers: ["canal boat chase", "waterway pursuit"] },
+  { french: "Le grabuge en voiture de golf sur le terrain de luxe", answers: ["golf course chaos", "cart rampage"] },
+  { french: "L'effraction dans un club de campagne exclusif", answers: ["country club heist", "rich neighborhood break in"] },
+  { french: "Le braquage de la piscine d'un manoir", answers: ["mansion robbery", "estate burglary"] },
+  { french: "L'assommoir du gardien de securite", answers: ["stealth takedown", "guard knockout"] },
+  { french: "Le contournement du systeme de securite laser", answers: ["laser grid", "security bypass"] },
+  { french: "Le piratage du lecteur biometrique du coffre", answers: ["biometric scan", "vault unlock"] },
+  { french: "Le vol de piles de lingots d'or", answers: ["gold bar heist", "bullion robbery"] },
+  { french: "Le braquage de la bourse aux diamants", answers: ["diamond heist", "gem robbery"] },
+  { french: "Le cambriolage d'une vente aux encheres d'art contrefait", answers: ["art gallery heist", "painting theft"] },
+  { french: "La mission de recuperation d'artefacts au musee", answers: ["museum break in", "ancient artifact theft"] },
+  { french: "La fusillade dans la salle VIP d'un casino souterrain", answers: ["casino shootout", "underground gambling hall"] },
+  { french: "Le trucage d'une machine a sous", answers: ["rigged slot machine", "casino hack"] },
+  { french: "Le trucage de paris sur les courses de chevaux", answers: ["fixed race", "track betting scam"] },
+  { french: "Le sabotage de la piste de courses de chiens", answers: ["dog track raid", "greyhound sabotage"] },
+  { french: "Le tonneau en avion de voltige au-dessus de la ville", answers: ["stunt plane", "aerial acrobatics"] },
+  { french: "Le saut en chute libre au-dessus de la plage de Vice City", answers: ["sky dive", "beach jump"] },
+  { french: "Le vol en combinaison volant a travers les gratte-ciel", answers: ["wingsuit flight", "skyscraper glide"] },
+  { french: "Le poste de tireur d'elite dans une montgolfiere", answers: ["hot air balloon", "aerial sniper"] },
+  { french: "Le detournement de la banniere publicitaire du dirigeable", answers: ["blimp hijack", "airship takeover"] },
+  { french: "Le complot de deraillement d'un train de marchandises", answers: ["train derailment", "railroad heist"] },
+  { french: "Le vol d'une locomotive de train de marchandises", answers: ["train hijacking", "locomotive theft"] },
+  { french: "L'accident de vehicule a un passage a niveau", answers: ["train crash", "vehicle stuck on tracks"] },
+  { french: "Le saut par-dessus un pont-levis ouvert", answers: ["drawbridge jump", "bridge gap leap"] },
+  { french: "La fusillade dans les embouteillages d'un tunnel routier", answers: ["tunnel shootout", "highway tunnel traffic"] },
+  { french: "La bagarre sur le quai d'une station de metro", answers: ["subway fight", "metro station brawl"] },
+  { french: "L'echappatoire au cordons de police dans les tunnels du metro", answers: ["metro escape", "subway tunnel chase"] },
+  { french: "Le braquage du pont passagers d'un navire de croisiere", answers: ["cruise ship robbery", "liner heist"] },
+  { french: "La prise de controle d'une barge casino flottante", answers: ["floating casino", "barge heist"] },
+  { french: "L'infiltration tactique d'une plateforme petroliere", answers: ["oil rig assault", "offshore platform raid"] },
+  { french: "La confrontation avec le gardien de phare", answers: ["lighthouse lookout", "coastal watchtower"] },
+  { french: "La perturbation d'une fete autour d'un feu de camp sur la plage", answers: ["beach party", "bonfire brawl"] },
+  { french: "Le chaos de la foule pendant le Spring Break", answers: ["spring break", "crowd riot"] },
+  { french: "La falsification de passes pour les coulisses d'un festival", answers: ["music festival", "backstage infiltration"] },
+  { french: "Le fracas du materiel dans la cabine du DJ", answers: ["dj booth fight", "concert chaos"] },
+  { french: "Le reseau de revente de billets de concert VIP", answers: ["ticket scalping", "black market passes"] },
+  { french: "La course-poursuite des paparazzi derriere une celebritie", answers: ["paparazzi chase", "celebrity stalker"] },
+  { french: "L'explosion ratee lors d'une cascade sur un plateau de cinema", answers: ["movie set chaos", "film studio explosion"] },
+  { french: "L'escalade du panneau de style Hollywood", answers: ["sign climb", "landmark scaling"] },
+  { french: "Le cambriolage de l'astronome a l'observatoire", answers: ["observatory heist", "hilltop robbery"] },
+  { french: "La fusillade sur la passerelle d'entretien d'un parc eolien", answers: ["wind turbine fight", "wind farm catwalk"] },
+  { french: "La course en quad sur le champ de panneaux solaires", answers: ["solar farm race", "atv desert dash"] },
+  { french: "Le piege pour auto-stoppeur sur l'autoroute du desert", answers: ["hitchhiker trap", "desert ambush"] },
+  { french: "L'exploration d'une ville fantome abandonnee", answers: ["ghost town", "abandoned settlement"] },
+  { french: "Le confinement militaire du site d'ecrasement d'une meteorite", answers: ["meteorite site", "alien conspiracy area"] },
+  { french: "Le rassemblement secret d'une secte d'ovnis", answers: ["ufo cult", "alien believers"] },
+  { french: "L'interview dans la cave d'un theoricien du complot", answers: ["conspiracy theorist", "tinfoil hat interview"] },
+  { french: "L'emission de radio de minuit avec un talk-show", answers: ["radio talk show", "midnight broadcast"] },
+  { french: "L'enregistrement de voix off pour une publicite satirique", answers: ["commercial parody", "satirical ad"] },
+  { french: "La dispute et la fusillade au drive-in d'un fast-food", answers: ["drive thru fight", "fast food rage"] },
+  { french: "La confrontation pour rage au volant a coups de batte de base-ball", answers: ["road rage", "bat beatdown"] },
+  { french: "La bagarre suite a un accrochage dans un parking", answers: ["parking lot fight", "fender bender dispute"] },
+  { french: "Le vol d'une voiture par le service de voiturier", answers: ["valet heist", "stealing customer cars"] },
+  { french: "Le piege des brosses automatiques dans une station de lavage", answers: ["car wash escape", "automatic wash ambush"] },
+  { french: "L'effraction dans un box de stockage personnel", answers: ["storage unit heist", "lock cutter"] },
+  { french: "L'escroquerie d'un homme politique corrompu", answers: ["politician blackmail", "extortion plot"] },
+  { french: "La reunion pour la remise de photos compromettantes", answers: ["blackmail meeting", "photo exchange"] },
+  { french: "L'echange de la mallette pour la rancon", answers: ["ransom drop", "briefcase exchange"] },
+  { french: "L'operation de sauvetage d'otages", answers: ["hostage rescue", "save the captive"] },
+  { french: "La decoupe thermique du coffre de banque avec une lance", answers: ["thermal lance", "cutting vault door"] },
+  { french: "L'effraction d'une porte a l'explosif C4", answers: ["c4 charge", "explosive entry"] },
+  { french: "La progression tactique dans le couloir avec des grenades fumigenes", answers: ["smoke grenade", "tactical advance"] },
+  { french: "Le nettoyage d'une piece a l'aide d'une grenade etourdissante", answers: ["flashbang entry", "room clear"] },
+  { french: "Le tir de suppression avec un fusil de sniper", answers: ["suppressive fire", "sniper cover"] },
+  { french: "L'elimination au combat en frappant avec la crosse du pistolet", answers: ["pistol whip", "close quarters combat"] },
+  { french: "La roulade d'evitement derriere un abri", answers: ["combat roll", "dive for cover"] },
+  { french: "Le tir en aveugle autour d'un angle", answers: ["blind fire", "corner shooting"] },
+  { french: "Le remplacement de la plaque de blindage en plein milieu d'un echange de tirs", answers: ["armor plating", "putting on vest"] },
+  { french: "La consommation d'en-cas pour recuperer de la sante sous les tirs", answers: ["eating snacks", "healing up"] },
+  { french: "Le changement d'arme grace au menu circulaire d'inventaire", answers: ["weapon wheel", "switching guns"] },
+  { french: "La defense en utilisant la portiere d'une voiture comme bouclier pare-balles", answers: ["car door cover", "vehicle shield"] },
+  { french: "La tactique consistant a tirer dans les pneus pour immobiliser un vehicule", answers: ["shooting tires", "disabled vehicle"] },
+  { french: "L'arret d'un vehicule grace a un tir de sniper dans le bloc moteur", answers: ["engine block shot", "stopping the car"] },
+  { french: "La manoeuvre PIT comme technique de poursuite policiere", answers: ["pit maneuver", "ramming the suspect"] },
+  { french: "Le deploiement de bandes de clous sur la route", answers: ["spike strips", "tire deflation"] },
+  { french: "Le passage en force a travers une barricade de barrage routier", answers: ["roadblock crash", "breaking through barricade"] },
+  { french: "L'evasion du projecteur d'un helicoptere", answers: ["avoiding searchlight", "hiding from chopper"] },
+  { french: "La diminution de l'indice de recherche lorsque les etoiles clignotent", answers: ["losing the cops", "wanted level cooling down"] },
+  { french: "La sequence d'ecran d'arrestation interceptee", answers: ["busted screen", "getting arrested"] },
+  { french: "La facture d'hopital suite a une reaparition apres un echec", answers: ["wasted screen", "respawning at hospital"] },
+  { french: "Le changement de vetements dans la garde-robe de la planque", answers: ["changing clothes", "outfit selection"] },
+  { french: "La personnalisation de la coiffure au salon de coiffure", answers: ["haircut", "salon visit"] },
+  { french: "La seance de tatouage au salon de tatouage", answers: ["tattoo shop", "getting inked"] },
+  { french: "L'achat d'en-cas dans une epicerie", answers: ["buying snacks", "store items"] },
+  { french: "Le gain a un jeu a gratter de loterie", answers: ["scratch card", "lottery win"] },
+  { french: "Le vol du pot de pourboire d'un artiste de rue", answers: ["stealing tip jar", "street musician robbery"] },
+  { french: "Le piratage d'un distributeur automatique avec un pied-de-biche", answers: ["atm robbery", "crowbar atm smash"] },
+  { french: "Le crime consistant a arracher le telephone d'un pieton", answers: ["phone snatching", "stealing phone from pedestrian"] },
+  { french: "L'evasion en bicyclette volee", answers: ["bicycle theft", "pedal bike escape"] },
+  { french: "La figure acrobatique dans le demi-pipe d'un skatepark", answers: ["skate park", "halfpipe trick"] },
+  { french: "Le saut de toit en BMX", answers: ["bmx drop", "roof gap jump"] },
+  { french: "La course en patins a roulettes sur la promenade", answers: ["boardwalk skate", "roller skating race"] },
+  { french: "Le piege appate par la musique d'un camion de glaces", answers: ["ice cream truck trap", "luring victims"] },
+  { french: "La bagarre pour le territoire entre camions-restaurants", answers: ["food truck fight", "culinary turf war"] },
+  { french: "La destruction d'un chariot de vendeur de nourriture de rue", answers: ["destroying food cart", "vendor chaos"] },
+  { french: "Le panorama de palmiers au coucher du soleil sur fond de neon", answers: ["sunset panorama", "neon palm trees"] },
+  { french: "L'inondation causee par une tempete tropicale ou un ouragan", answers: ["hurricane flood", "tropical storm weather"] },
+  { french: "La tempete de plage frappe par un eclair", answers: ["lightning storm", "beach thunder"] },
+  { french: "Un arc-en-ciel au-dessus de l'horizon de Vice City", answers: ["rainbow view", "post storm rainbow"] },
+  { french: "La brume matinale sur le marais", answers: ["morning mist", "swamp fog"] },
+  { french: "L'observation des etoiles depuis une crete du desert", answers: ["desert stargazing", "night sky view"] }
+];
+
 let blitzInterval = null;
 let INITIAL_TIMER_SECONDS = 30;
 
@@ -588,7 +774,7 @@ const KEY = "customPhrases";
 
 let backToScreen = 0;
 
-const phrasesByMode = { all: allPhrases, easy: easyPhrases, medium: mediumPhrases, hard: hardPhrases, custom: customPhrases, seasonal: seasonalPhrases, seasonal2: seasonal2Phrases };
+const phrasesByMode = { all: allPhrases, easy: easyPhrases, medium: mediumPhrases, hard: hardPhrases, custom: customPhrases, seasonal: seasonalPhrases, seasonal2: seasonal2Phrases, seasonal3: seasonal3Phrases };
 
 let currentMode = load('frenchGamemode', 'all');
 
@@ -663,6 +849,7 @@ function showStartScreen() {
   document.getElementById('result').hidden = true;
   document.getElementById('startScreen').hidden = false;
   document.getElementById('abtErrors').hidden = true;
+  document.getElementById('bugs').hidden = true;
 
   showScoreBool(false);
   checkSeasonal();
@@ -810,42 +997,55 @@ async function startGame(mode = currentMode) {
     localStorage.setItem('speechRate', JSON.stringify(speechRate));
   });
 
-  currentMode = mode;
-
   document.querySelector('.seasonal2Overlay').hidden = true;
   document.querySelector('.seasonalOverlay').hidden = true;
   document.getElementById('timer-display').hidden = true;
   if (mode === 'seasonal') {
-    await getServerTime();
     document.querySelector('.seasonalOverlay').hidden = false;
   } else if (mode === 'seasonal2') {
-    await getServerTime();
     document.querySelector('.seasonal2Overlay').hidden = false;
-  } else { 
-    document.body.classList.remove('seasonal');
-  }
-
-  if (mode === 'blitz') {
+  } else if (mode === 'seasonal3') {
+    try { document.querySelector('.seasonal3Overlay').hidden = false; }
+    catch {}
+  } else if (mode === 'blitz') {
     document.getElementById('timer-display').textContent = 'Loading...';
     document.getElementById('timer-display').hidden = false;
+    document.querySelector('.reroll').hidden = true;
     blitzStartTime = performance.now();
     startBlitzCountdown();
     soundJeopardy.play();
+  } else {
+    document.body.classList.remove('seasonal');
+    document.querySelector('.reroll').hidden = false;
   }
 
-  let allowed = mode !== 'seasonal' && mode !== 'seasonal2';
-  if (mode === 'seasonal' && serverTime !== null || mode === 'seasonal2' && serverTime !== null) {
-    document.getElementById('error').textContent = 'Loading...';
-    document.getElementById('error').hidden = false;
-    allowed = serverTime.getFullYear() < 2027 && serverTime.getMonth() === 10;
-    document.getElementById('error').hidden = true;
+  let allowed = true;
+  if (mode === 'seasonal' || mode === 'seasonal2' || mode === 'seasonal3') {
+    await getServerTime();
+    if (!serverCalendar) {
+      error('Unable to fetch date');
+      return;
+    }
+    
+    const year = Number(serverCalendar[0]);
+    const month = Number(serverCalendar[1]);
+
+    if (mode === 'seasonal' || mode === 'seasonal2' || mode === 'seasonal3') {
+      allowed = (year < 2027 && month === 11);
+    }/* else if (mode === 'seasonal2') {
+      allowed = (year < 2027 && month === 11);
+    } else if (mode === 'seasonal3') {
+      allowed = (year < 2027 && (month === 11 || month === 10));
+    }*/
   }
 
   if (!allowed) {
     error('This mode is unavailable');
     return;
   } else {
+    currentMode = mode;
   }
+
   showGameComponents(mode);
   phrases = phrasesByMode[mode];
   localStorage.setItem('frenchGamemode', JSON.stringify(mode));
@@ -857,11 +1057,11 @@ async function startGame(mode = currentMode) {
   } else {
     pickPhrase();
   }
-  }
+}
 
 let modeScores = {};
 try {
-  const MODES = ['all', 'easy', 'medium', 'hard', 'custom', 'seasonal', 'seasonal2'];
+  const MODES = ['all', 'easy', 'medium', 'hard', 'custom', 'seasonal', 'seasonal2', 'seasonal3'];
   const readJSON = key => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } };
   const num = v => Number(v) || 0;
 
@@ -1060,6 +1260,11 @@ function gamemode() {
       console.warn("Failed to stop BGM or BGM is inactive");
     }
   }
+  soundJeopardy.pause()
+  soundJeopardy.currentTime = 0;
+  try {
+    clearInterval(blitzInterval);
+  } catch {};
   document.getElementById('startScreen').hidden = true;
   document.getElementById('result').hidden = true;
   document.getElementById('custom').hidden = true;
@@ -1138,4 +1343,11 @@ function showBugs() {
   document.getElementById('bugs').hidden = false;
 }
 
-document.getElementById('error').hidden = true
+/*function tutorial() {
+  let showAgain = load('tutorialBlitz', 'true');
+  if ()
+  document.getElementById('tutorial').hidden = false;
+  document.getElementById('tutorial').hidden = false;
+}*/
+
+document.getElementById('error').hidden = true;
