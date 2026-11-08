@@ -38,10 +38,10 @@
     <input type="radio" name="theme-group" id="force-dark" class="theme-trigger">
     <input type="radio" name="theme-group" id="force-light" class="theme-trigger">
 
-    <label for="force-dark" class="custom-button btn-dark btn">Switch to Dark Mode</label>
-    <label for="force-light" class="custom-button btn-light btn">Switch to Light Mode</label>
+    <label for="force-dark" class="custom-button btn-dark btn">Dark Mode</label>
+    <label for="force-light" class="custom-button btn-light btn">Light Mode</label>
 
-    <p class="ver">v10.8.6</p>
+    <p class="ver">v10.6.5</p>
     <div class="page-content">
     <!--<div class="scoreGroup transitionOut" onmouseenter="mouseIn = true; setTimeout(() => {}, 3000); if (mouseIn === true) {startFade(this, 2000);};" onmouseleave="mouseIn = false; this.classList.remove('hidden');">-->
     <p class="score">Loading...</p>
@@ -69,7 +69,7 @@
         <button onclick="startGame('medium');">Medium</button>
         <button onclick="startGame('hard');">Hard</button>
         <button onclick="startGame('all');">All</button>
-        <button onclick="/*tutorial();*/startGame('blitz');">Blitz</button>
+        <button onclick="/*tutorial();*/pickPhrase(); startGame('blitz');">Blitz</button>
         <button onclick="if (customPhrases === allPhrases) {custom();} else if (customPhrases.length === 0) {console.log('Cannot Play With No Phrases'); custom();} else {startGame('custom');};">Custom</button>
         <br><br>
         <h2>Limited Time</h1>
@@ -79,10 +79,10 @@
         <br><br>
         <p class="allScore space"></p>
         <button class="reset-score-gamemode" onclick="resetAllScore();">Reset All Score</button>
-        <br><br><br><br>
       </div>
 
       <div id="game" hidden>
+        
         <img src="Images\November\remember-overlay.png" class="overlay seasonalOverlay" id="sOverlay" hidden>
         <img src="Images\November\remember-vertical.png" class="overlay seasonalOverlay-v" id="sOverlay-v" hidden>
         <img src="Images\November\thanksgiving-overlay.png" class="overlay seasonal2Overlay" id="sOverlay2" hidden>
@@ -90,19 +90,18 @@
         <button type="game" class="back" onclick="gamemode();">Back</button>
         <button type="game" id="mute" onclick="toggleMute();">🔊</button>
         <p id="timer-display">Loading...</p>
-        <span lang="fr" translate="no"><p class="phrase" style="z-index: 99998; align-items: center; justify-content: center; display: flex; font-size: 2rem; text-align: center;">
-        Loading...
-        </p>
+        <span lang="fr" translate="no"><p class="phrase">Loading...</p>
         <div class="listenControls">
-        <button type="game" id="speech" onclick="speak();">🔊 Listen</button>
-        <input type="range" id="speechRate" name="volume" min="1" max="20">
-        <label id="displayRate"></label></div></span>
-        <br><br>
+          <button type="game" id="speech" onclick="speak();">🔊 Listen</button>
+          <input type="range" id="speechRate" name="volume" min="1" max="20">
+          <label id="displayRate"></label></div></span>
+        <p id="hint"></p>
         <div class="answer-row">
         <input type="text" id="userInput" placeholder="Type english here" onkeypress="if(event.key === 'Enter') checkAnswer();"/>
         <button type="game" class="submit" onclick="checkAnswer();">Submit</button>
         <button type="game" class="reroll" onclick="reroll(false);">Reroll</button>
         <button type="game" onclick="custom();">Edit Phrases</button>
+        <button onclick="score.hints++; updateScore(); this.hidden = true; hint();" id="hint-btn">Hint</button>
         </div>
       </div>
 
@@ -125,7 +124,7 @@
         <img src="https://media.tenor.com/Wlu-ZlnW7QYAAAAj/no-dislike.gif" class="wrongGif" alt="Incorrect GIF" hidden>
         <p class="result-message space"></p>
         <p class="correct-answer space"></p>
-        <button id="speech" onclick="speak();">🔊 Listen</button>
+        <button id="speech" onclick="speak(prevFrench || current?.french);">🔊 Listen</button>
         <button data-page="result" onclick="
         pickPhrase(); startGame();" id="goAgain">Play Again</button>
       </div>
