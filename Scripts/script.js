@@ -33,8 +33,6 @@ async function getServerTime() {
   l.hidden = true;
 }
 
-getServerTime();
-
 let prevFrench = null;
 
 let pressedStartCount = load('frenchStartPressed', 0);
@@ -817,6 +815,7 @@ showScore();
 function invalidErr(log) {
   document.querySelector('.submit').hidden = true;
   document.getElementById('userInput').blur();
+  document.getElementById('userInput').value = log;
   setTimeout(() => {
     document.getElementById('userInput').value = '';
     focus();
@@ -827,8 +826,7 @@ function invalidErr(log) {
 function speak(text = current.french) {
   if (!('speechSynthesis' in window))
   {
-    document.getElementById('userInput').value = 'SPEACH UNSUPPORTED';
-    invalidErr('SPEACH UNSUPPORTED');
+    error('TTS FAIL');
     return;
   }
   speechSynthesis.cancel();
@@ -994,7 +992,6 @@ function error(mes) {
 }
 
 async function startGame(mode = currentMode) {
-
   const slider = document.getElementById('speechRate');
 
   slider.value = speechRate * 10;
@@ -1161,7 +1158,6 @@ showScore = function () {
 
     const label = currentMode.charAt(0).toUpperCase() + currentMode.slice(1);
     
-    // Check if current mode is Blitz to display streak labels instead of wins/losses
     if (currentMode === 'blitz') {
       document.querySelector('.score').innerHTML = `${label}: Best Streak ${score.wins} | Streak ${score.losses}`;
     } else {
@@ -1198,14 +1194,13 @@ function endGameBlitz(resultMsg) {
   "YOUR ANSWER: " + userInput + "\n" +
   "ANSWER: " + current.answers.join(" / ");
 
-  // Blitz streak logic check
   if (score.losses > score.wins) {
     score.wins = score.losses;
   }
   
   resultMsg.textContent = `Time's Up! Streak: ${score.losses} | Best Streak: ${score.wins}`;
 
-  score.losses = 0; // Reset current streak
+  score.losses = 0;
   updateScore();
 }
 
@@ -1228,7 +1223,7 @@ function checkAnswer() {
       return;
     } 
     if (isCorrect) {
-      score.losses++; // Track current streak in blitz using losses variable
+      score.losses++;
       soundWin.play();
       document.getElementById('userInput').value = '';
       pickPhrase();
@@ -1243,9 +1238,8 @@ function checkAnswer() {
       try {soundJeopardy.pause(); soundJeopardy.currentTime = 0;} catch {error('Unable to stop sound')}
     }
   } else {
-    // Standard Normal Mode Logic (Wins / Losses)
     if (!userInput.trim()) {
-      invalidErr(); return;
+      invalidErr('INVALID ENTRY'); return;
     }
     delete savedPhrases[currentMode];
     storeSavedPhrases();
@@ -1262,101 +1256,13 @@ function checkAnswer() {
 
     if (isCorrect) {
       soundWin.play();
-      score.wins++; // Standard win increment
+      score.wins++;
       result.textContent = "Correct!";
       result.style.color = "limegreen";
     } else {
       soundWrong.play();
-      score.losses++; // Standard loss increment
+      score.losses++;
       result.textContent = "Incorrect.";
-      result.style.color = "red";
-    }
-    
-    if (gif) {
-      gif.hidden = false;
-      gif.classList.remove('hidden');
-      setTimeout(() => {
-        if (!currentMode.includes('seasonal')) gif.hidden = true; 
-        else gif.classList.add('hidden');
-        document.getElementById("goAgain").hidden = false;
-      }, 1500);
-    } else {
-      document.getElementById("goAgain").hidden = false;
-    }
-    
-    updateScore();
-    showAnswers();
-    prevFrench = current.french;
-  }
-}
-
-function checkAnswer() {
-  if (blitzInterval && currentMode !== 'blitz') clearInterval(blitzInterval);
-
-
-  const userInput = document.getElementById("userInput").value;
-  const isCorrect = current.answers.some(a => normalize(a) === normalize(userInput));
-  const result = document.querySelector(".result-message");
-  const baseMode = currentMode.replace("Listen", "");
-  
-  if (baseMode === 'blitz') {
-    if (!userInput.trim()) {
-      soundRoll.play();
-      if (score.losses > score.wins) score.wins = score.losses;
-      score.losses = 0;
-      updateScore();
-      pickPhrase();
-      document.getElementById('userInput').value = '';
-      return;
-    } 
-    if (isCorrect) {
-      score.losses++; // Increment current streak on correct answer in blitz
-      soundWin.play();
-      document.getElementById('userInput').value = '';
-      pickPhrase();
-      updateScore();
-    } else {
-      if (score.losses > score.wins) {
-        score.wins = score.losses;
-      }
-      score.losses = 0;
-      updateScore();
-      endGameBlitz(result);
-      try {soundJeopardy.pause(); soundJeopardy.currentTime = 0;} catch {error('Unable to stop sound')}
-    }
-  } else {
-    if (!userInput.trim()) {
-      invalidErr(); return;
-    }
-    delete savedPhrases[currentMode];
-    storeSavedPhrases();
-
-    document.getElementById("result").hidden = false;
-    document.getElementById("goAgain").hidden = false;
-    document.getElementById("game").hidden = true;
-
-    checkSeasonal();
-
-    let gif = (baseMode === 'seasonal') 
-      ? document.querySelector(isCorrect ? ".sznRightGif" : ".sznWrongGif")
-      : document.querySelector(isCorrect ? ".rightGif" : ".wrongGif");
-
-    if (isCorrect) {
-      soundWin.play();
-      score.losses++; // Increment current streak (losses variable)
-      result.textContent = `Correct! Streak: ${score.losses}`;
-      result.style.color = "limegreen";
-    } else {
-      soundWrong.play();
-      
-      // Check if current streak exceeds best streak before resetting
-      if (score.losses > score.wins) {
-        score.wins = score.losses;
-      }
-      const finalStreak = score.losses;
-      score.losses = 0; // Reset current streak
-      
-      result.textContent = `Incorrect. Streak: ${finalStreak} | Best Streak: ${score.wins}`;
       result.style.color = "red";
     }
     
@@ -1388,17 +1294,17 @@ function showAnswers() {
 function reroll() {
   soundRoll.play();
   if (currentMode !== 'blitz') {
-  document.querySelector(".result-message").textContent = '';
-  showAnswers();
-  document.getElementById("game").hidden = true;
-  document.getElementById("result").hidden = false;
-  checkSeasonal();
-  prevFrench = current.french;
+    document.querySelector(".result-message").textContent = '';
+    showAnswers();
+    document.getElementById("game").hidden = true;
+    document.getElementById("result").hidden = false;
+    checkSeasonal();
+    prevFrench = current.french;
+    score.losses++;
   }
-  score.losses++;
   updateScore();
   pickPhrase();
-};
+}
 
 function pickPhrase() {
   let next;
@@ -1406,7 +1312,7 @@ function pickPhrase() {
     next = phrases[Math.floor(Math.random() * phrases.length)];
   } while (next.french === current?.french && phrases.length > 1);
   current = next;
-  prevFrench = current.french; // Keep prevFrench updated safely
+  prevFrench = current.french;
   savedPhrases[currentMode] = current;
   storeSavedPhrases();
   msg.textContent = current.french;
