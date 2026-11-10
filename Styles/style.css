@@ -3,6 +3,7 @@
   --text-color: rgb(25, 25, 25);
   --show-light-btn: none;
   --show-dark-btn: inline-block;
+  --hyperlink-color: #2424ff;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,6 +20,7 @@
   --text-color: rgb(244, 243, 242);
   --show-light-btn: inline-block;
   --show-dark-btn: none;
+  --hyperlink-color: #006aff;
 }
 
 :root:has(#force-light:checked) {
@@ -26,20 +28,13 @@
   --text-color: rgb(25, 25, 25);
   --show-light-btn: none;
   --show-dark-btn: inline-block;
+  --hyperlink-color: #0000ff;
 }
 
 .theme-trigger {
   position: absolute;
   opacity: 0;
   pointer-events: none;
-}
-
-.custom-button {
-  display: inline-block;
-  background-color: #0076ff;
-  color: white;
-  cursor: pointer;
-  user-select: none;
 }
 
 .btn-dark { display: var(--show-dark-btn); }
@@ -52,17 +47,22 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-body.seasonal main, body.seasonal2 main {
+body.seasonal main, body.seasonal2 main, body.seasonal3 main {
   max-width: 85%;
   margin: 0 auto;
+}
+
+body.seasonal main {
+  padding-top: clamp(32px, 10vw, 80px);
 }
 
 body.seasonal2 main {
   padding-top: clamp(32px, 6vw, 80px);
 }
 
-body.seasonal main {
-  padding-top: clamp(32px, 10vw, 80px);
+body.seasonal3 main {
+  padding-top: 30vh;
+  padding-bottom: 20vh;
 }
 
 #mute {
@@ -71,27 +71,47 @@ body.seasonal main {
   height: fit-content;
 }
 
-button, .btn {
+.btn, .theme-btn {
   font: bold 14px verdana;
   padding: 7.5px 15px;
   background-color: #4CAF50;
   color: white;
   border: none;
   border-radius: 5px;
-  cursor: pointer;
   max-width: 100%;
   white-space: normal;
   transition: transform 0.1s;
 }
 
-button:hover, .btn:hover {
+.btn, .r-btn {
+  transition: transform 0.1s;
+  cursor: not-allowed;
+  filter: brightness(0.5);
+}
+
+.btn-loaded, .theme-btn, .r-btn-loaded {
+  cursor: pointer;
+  filter: none;
+}
+
+.btn-loaded:hover {
   filter: drop-shadow(2px 3px 0 #4CAF50) brightness(1.1);
   z-index: 9999;
 }
 
-button:active, .btn:active {
+.btn-loaded:active {
   transform: translate(2px, 2px);
   filter: drop-shadow(0 1px 0 #4CAF50);
+}
+
+.r-btn-loaded:hover {
+  filter: drop-shadow(2px 3px 0 #ed2828) brightness(1.1);
+  z-index: 9999;
+}
+
+.r-btn-loaded:active {
+  transform: translate(2px, 2px);
+  filter: drop-shadow(0 1px 0 #ed2828);
 }
 
 input[type="text"] {
@@ -168,8 +188,13 @@ input[type="range"]:active {
 }
 
 .reset-score-gamemode {
+  font: bold 14px verdana;
+  padding: 7.5px 15px;
   background-color: #ed2828;
   color: white;
+  border: none;
+  border-radius: 5px;
+  z-index: 9999;
 }
 
 .reset-score, .reset-score2 {
@@ -180,18 +205,7 @@ input[type="range"]:active {
   border: none;
   border-radius: 5px;
   position: fixed;
-  cursor: pointer;
   z-index: 9999;
-}
-
-.reset-score:hover, .reset-score2:hover, .reset-score-gamemode:hover {
-  filter: drop-shadow(2px 3px 0 #ed2828) brightness(1.1);
-  z-index: 9999;
-}
-
-.reset-score:active, .reset-score2:active, .reset-score-gamemode:active {
-  transform: translate(2px, 2px);
-  filter: drop-shadow(0 1px 0 #ed2828);
 }
 
 .space {
@@ -207,7 +221,7 @@ input[type="range"]:active {
   z-index: 9999;
 }
 
-.btn {
+.theme-btn {
   bottom: 13px;
   right: 5px;
   width: 40px;
@@ -251,6 +265,17 @@ input[type="range"]:active {
   white-space: pre-line;
 }
 
+a,
+a:link,
+a:visited,
+a:hover,
+a:active,
+a:focus {
+  color: var(--hyperlink-color);
+  outline: none;
+  transition: color 0.3s ease;
+}
+
 #items li {
   flex-wrap: wrap;
 }
@@ -269,12 +294,17 @@ main {
   .fillerTop {
     padding: calc(0px + 3vw);
   }
+  
+  body.seasonal3 main {
+  padding-top: 15vh;
+  padding-bottom: 10vh;
+  }
 }
 
 @media (max-width: 600px) {
   body { padding: 0 12px; }
 
-  button, .btn {
+  .btn, .theme-btn {
     padding: 10px 16px; margin: 4px 0;
   }
   input[type="text"] {
@@ -299,7 +329,7 @@ main {
   .reset-score2 {
     left: 45px;
   }
-  .btn {
+  .theme-btn {
   bottom: 0px;
   right: 5px;
   width: 40px;
@@ -321,7 +351,13 @@ main {
   body.seasonal2 #sOverlay2-v {
     display: block;
   }
-  body.seasonal2 main {
+  body.seasonal3 #sOverlay3 {
+    display: none;
+  }
+  body.seasonal3 #sOverlay3-v {
+    display: block;
+  }
+  body.seasonal3 main {
     max-width: 75%;
   }
   body.seasonal2 main {
@@ -374,6 +410,7 @@ main {
   text-align: center;
   font: bold 30px monospace;
   z-index: 99999;
+  color: white;
   mix-blend-mode: difference;
   pointer-events: none;
 }
@@ -426,12 +463,4 @@ main {
   object-fit: fill;
   pointer-events: none;
   z-index: 9998;
-}
-
-#overlay, #overlay-v {
-  display: none;
-}
-
-body.seasonal #overlay {
-  display: block;
 }
