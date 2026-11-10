@@ -701,6 +701,9 @@ bgm.volume = 0;
 const bgm2 = new Audio('Sounds/November/bgm2.mp3');
 bgm2.loop = true;
 bgm2.volume = 0;
+const bgm3 = new Audio('Sounds/November/bgm3.mp3');
+bgm3.loop = true;
+bgm3.volume = 0;
 
 const BGM_VOLUME = 0.2;
 const FADE_MS = 500;
@@ -764,6 +767,21 @@ function stopBgm2() {
   fadeTo(0, bgm2, () => {
     bgm2.pause();
     bgm2.currentTime = 0;
+  });
+}
+
+function startBgm3() {
+  playbackRequested.set(bgm3, true);
+  bgm3.play().then(() => {
+    if (playbackRequested.get(bgm3)) fadeTo(BGM_VOLUME, bgm3);
+  }).catch(() => {error('Unable to begin bgm playback')});
+}
+
+function stopBgm3() {
+  playbackRequested.set(bgm3, false);
+  fadeTo(0, bgm3, () => {
+    bgm3.pause();
+    bgm3.currentTime = 0;
   });
 }
 
@@ -903,8 +921,12 @@ function checkSeasonal(mode) {
 
   const shouldShowOverlay = activeMode === 'seasonal' && (isGameVisible || isResultVisible);
   const shouldShowOverlay2 = activeMode === 'seasonal2' && (isGameVisible || isResultVisible);
+  const shouldShowOverlay3 = activeMode === 'seasonal3' && (isGameVisible || isResultVisible);
 
   document.body.classList.remove('halloween');
+  document.body.classList.remove('seasonal');
+  document.body.classList.remove('seasonal2');
+  document.body.classList.remove('seasonal3');
   if (shouldShowOverlay) {
     document.body.classList.add('seasonal');
     document.body.classList.remove('seasonal2');
@@ -928,7 +950,6 @@ function checkSeasonal(mode) {
     }
     } else if (shouldShowOverlay2) {
     document.body.classList.add('seasonal2');
-    document.body.classList.remove('seasonal');
     stopBgm();
     document.getElementById('mute').hidden = false;
 
@@ -947,11 +968,27 @@ function checkSeasonal(mode) {
     if (!muted && bgm2.paused) {
       startBgm2();
     }
-    } else {
-    document.body.classList.remove('seasonal');
-    document.body.classList.remove('seasonal2');
-    document.querySelectorAll('.move-button, button, button[type="game"]').forEach(b => b.classList.remove('seasonal2'));
-    
+  } else if (shouldShowOverlay3) {
+    //////////////////////////////////////////
+    document.body.classList.add('seasonal3');
+    document.getElementById('mute').hidden = false;
+
+    document.querySelectorAll('.move-button, button, button[type="game"]').forEach(b => {
+      const isResetButton = b.classList.contains('reset-score-button') || b.closest('.reset-score') || b.closest('.reset-score2');
+      const isGamemodeMenuButton = b.closest('#gamemode');
+      const isBugReportButton = b.textContent.includes('Report A Bug');
+      
+      if (!isResetButton && !isGamemodeMenuButton && !isBugReportButton) {
+        b.classList.add('seasonal');
+      } else {
+        b.classList.remove('seasonal');
+      }
+    });
+
+    if (!muted && bgm3.paused) {
+      startBgm3();
+    }
+  } else {
     document.getElementById('mute').hidden = true;
     stopBgm();
     stopBgm2();
@@ -1006,8 +1043,9 @@ async function startGame(mode = currentMode) {
 
   currentMode = mode;
   showScore();
-  document.querySelector('.seasonal2Overlay').hidden = true;
   document.querySelector('.seasonalOverlay').hidden = true;
+  document.querySelector('.seasonal2Overlay').hidden = true;
+  document.querySelector('.seasonal3Overlay').hidden = true;
   
   document.getElementById('timer-display').hidden = true;
   document.getElementById('hint').textContent = null;
@@ -1439,4 +1477,10 @@ function hint() {
   msg.textContent = `💡 Hint: ${current.hint}`;
 }
 
+document.querySelectorAll('.btn, .theme-btn').forEach(element => {
+  element.classList.add('btn-loaded');
+});
+document.querySelectorAll('.r-btn').forEach(element => {
+  element.classList.add('r-btn-loaded');
+});
 document.getElementById('error').hidden = true;
