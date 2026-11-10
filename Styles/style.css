@@ -1,181 +1,466 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="google" content="notranslate">
-    <title>FrançaisFlash</title>
-    <link rel="stylesheet" href="Styles/style.css">
-    <link id="favicon" rel="icon" type="image/png" href="Images\November\favicon-thanksgiving.ico" size="any">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-  </head>
-  <body>
-    <noscript>
-      <style>
-        .js-off {
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          text-align: center;
-          font: bold 20px sans-serif;
-          z-index: 99999;
-          display: fixed !important;
-        }
-        .page-content {
-          display: none !important;
-        }
-      </style>
-      <p class="js-off">
-        <strong>JavaScript is required.</strong> This site requires JavaScript to run.
-        Please enable it in your browser settings, then reload the page.
-        If the problem persists, try a current version of a modern browser such as
-        <a href="https://www.google.com/chrome/" target="_blank" rel="noopener noreferrer">Google Chrome</a>.
-        If the problem persists after updating to the newest version, please visit
-        <a href="https://github.com/bamslam1/french/issues">https://github.com/bamslam1/french/issues</a> to report a bug.
-      </p>
-    </noscript>
-    
-    <input type="radio" name="theme-group" id="force-dark" class="theme-trigger">
-    <input type="radio" name="theme-group" id="force-light" class="theme-trigger">
+:root {
+  --bg-color: rgb(244, 243, 242);
+  --text-color: rgb(25, 25, 25);
+  --show-light-btn: none;
+  --show-dark-btn: inline-block;
+  --hyperlink-color: #2424ff;
+}
 
-    <label for="force-dark" class="btn-dark theme-btn">Dark Mode</label>
-    <label for="force-light" class="btn-light theme-btn">Light Mode</label>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: rgb(25, 25, 25);
+    --text-color: rgb(244, 243, 242);
+    --show-light-btn: inline-block;
+    --show-dark-btn: none;
+  }
+}
 
-    <p class="ver">v10.8.9</p>
-    <div class="page-content">
-    <!--<div class="scoreGroup transitionOut" onmouseenter="mouseIn = true; setTimeout(() => {}, 3000); if (mouseIn === true) {startFade(this, 2000);};" onmouseleave="mouseIn = false; this.classList.remove('hidden');">-->
-    <p class="score">Loading...</p>
-    <button class="reset-score r-btn" onclick="score.wins = 0; score.losses = 0; updateScore();">Reset Score</button>
-    <button class="reset-score2 r-btn" onclick="resetAllScore(); console.log(this);">Reset All Score</button>
-    <a href="https://github.com/bamslam1/french/issues" target="_blank" rel="noopener noreferer" class="bott-right"><button class="btn" title="Press new issue to create a report">Report A Bug</button></a>
-    <p id="error">Loading...</p>
-    <main>
-      <div id="startScreen">
-        <h1 class="title">FrançaisFlash</h1>
-        <p>
-          This game is designed to help you practice your French skills by providing a French phrase or word and you answer them in the input field. Your score is saved by each gamemode. Reloading the site will bring your most recently played gamemode's score up. Reloading the site will not result in a free phrase reroll (Patched in <a href="https://github.com/bamslam1/french/releases#release-v5.2.3" target="_blank" rel="noopener noreferer">v5.2.3</a>).<br><br>Please note that rerolling the phrase will take off one point.
-        </p>
-        <a href="https://bamslam1.github.io/my-projects" target="_blank" rel="noopener noreferer"><button class="btn">Other Projects</button></a>
-        <button class="btn" data-page="game" onclick="pressedStartCount++; gamemode();">Start Game</button>
-        <br><br>
-        <a href="https://github.com/bamslam1/french/discussions/3" target="_blank" rel="noopener noreferer"><button class="btn">Discuss</button></a>
-        <button class="abtErrors btn" onclick="showAbtErrors();">More About Errors</button>
-        <button class="btn" onclick="showBugs();">Known Bugs</button>
-      </div>
+:root:has(#force-dark:checked) {
+  --bg-color: rgb(25, 25, 25);
+  --text-color: rgb(244, 243, 242);
+  --show-light-btn: inline-block;
+  --show-dark-btn: none;
+  --hyperlink-color: #006aff;
+}
 
-      <div id="gamemode" hidden>
-        <button class="btn" onclick="showStartScreen();">Back</button>
-        <h1>Choose Gamemode</h1>
-        <button class="btn" onclick="startGame('easy');">Easy</button>
-        <button class="btn" onclick="startGame('medium');">Medium</button>
-        <button class="btn" onclick="startGame('hard');">Hard</button>
-        <button class="btn" onclick="startGame('all');">All</button>
-        <button class="btn" onclick="/*tutorial();*/pickPhrase(); startGame('blitz');">Blitz</button>
-        <button class="btn" onclick="if (customPhrases === allPhrases) {custom();} else if (customPhrases.length === 0) {console.log('Cannot Play With No Phrases'); custom();} else {startGame('custom');};">Custom</button>
-        <br><br>
-        <h2>Limited Time</h1>
-        <button class="btn" onclick="startGame('seasonal');" title="This gamemode will be removed on November 30st">🌹 Remeberance 🌹</button>
-        <button class="btn" onclick="startGame('seasonal2');" title="This gamemode will be removed on November 30st">🦃 Thanksgiving 🦃</button>
-        <button class="btn" onclick="startGame('seasonal3')">GTA VI</button>
-        <br><br>
-        <p class="allScore space"></p>
-        <button class="reset-score-gamemode r-btn" onclick="resetAllScore();">Reset All Score</button>
-      </div>
+:root:has(#force-light:checked) {
+  --bg-color: rgb(244, 243, 242);
+  --text-color: rgb(25, 25, 25);
+  --show-light-btn: none;
+  --show-dark-btn: inline-block;
+  --hyperlink-color: #0000ff;
+}
 
-      <div id="game" hidden>
-        
-        <img src="Images\November\remember-overlay.png" class="overlay seasonalOverlay" id="sOverlay" hidden>
-        <img src="Images\November\remember-vertical.png" class="overlay seasonalOverlay-v" id="sOverlay-v" hidden>
-        <img src="Images\November\thanksgiving-overlay.png" class="overlay seasonal2Overlay" id="sOverlay2" hidden>
-        <img src="Images\November\thanksgiving-vertical.png" class="overlay seasonal2Overlay-v" id="sOverlay2-v" hidden>
-        <img src="Images\November\gtaVi.png" class="overlay seasonal3Overlay" id="sOverlay3" hidden>
-        <img src="Images\November\gtaVi-vertical.png" class="overlay seasonal3Overlay-v" id="sOverlay3-v" hidden>
-        <button type="game" class="back btn" onclick="gamemode();">Back</button>
-        <button type="game" class="btn" id="mute" onclick="toggleMute();">🔊</button>
-        <p id="timer-display">Loading...</p>
-        <span lang="fr" translate="no"><p class="phrase">Loading...</p>
-        <div class="listenControls">
-          <button type="game" class="btn" id="speech" onclick="speak();">🔊 Listen</button>
-          <input type="range" id="speechRate" name="volume" min="1" max="20">
-          <label id="displayRate"></label></div></span>
-        <p id="hint"></p>
-        <div class="answer-row">
-        <input type="text" id="userInput" placeholder="Type english here" onkeypress="if(event.key === 'Enter') checkAnswer();"/>
-        <button type="game" class="submit btn" onclick="checkAnswer();">Submit</button>
-        <button type="game" class="reroll btn" onclick="reroll(false);">Reroll</button>
-        <button type="game" onclick="custom();">Edit Phrases</button>
-        <button class="btn" onclick="score.hints++; updateScore(); this.hidden = true; hint();" id="hint-btn">Hint</button>
-        </div>
-      </div>
+.theme-trigger {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
 
-      <div id="custom" hidden>
-        <button class="back btn" onclick="gamemode();">Back</button>
-        <br><br>
-        <input type="text" placeholder="French Here" id="frenchCustom" onkeypress="if(event.key === 'Enter') document.getElementById('englishCustom').focus();">
-        <input type="text" placeholder="English Here" id="englishCustom" onkeydown="
-        if(event.key === 'Enter') {addToCustom();} else if (event.key === 'Backspace' && document.getElementById('englishCustom').value === '') {document.getElementById('frenchCustom').focus();}">
-        <button class="btn" onclick="addToCustom();">Add</button>
-        <br><br>
-        <button class="btn" onclick="if (customPhrases === allPhrases) {custom();} else if (customPhrases.length === 0) {console.warn('Cannot Play With No Phrases');} else {startGame('custom');};">Play With These Phrases</button>
-        <br><br>
-        <button class="red btn" onclick="removeFromList();">Remove All</button>
-        <ul id="items"></ul>
-      </div>
+.btn-dark { display: var(--show-dark-btn); }
+.btn-light { display: var(--show-light-btn); }
 
-      <div id="result" hidden>
-        <button class="back btn" onclick="startGame();">Back</button>
-        <img src="https://media.tenor.com/Wlu-ZlnW7QYAAAAj/no-dislike.gif" class="wrongGif" alt="Incorrect GIF" hidden>
-        <p class="result-message space"></p>
-        <p class="correct-answer space"></p>
-        <button class="btn" id="speech" onclick="speak(prevFrench || current?.french);">🔊 Listen</button>
-        <button class="btn" data-page="result" onclick="
-        pickPhrase(); startGame();" id="goAgain">Play Again</button>
-      </div>
+body {
+  font: normal 16px verdana;
+  color: var(--text-color);
+  background-color: var(--bg-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
 
-      <div id="abtErrors" hidden>
-        <button class="btn" onclick="showStartScreen();">Back</button>
-        <p>
-          If you are experiencing an error that reads <b>"This mode is unavailable"</b> then it can mean three things,<br><b>(1) your internet is off,<br>(2) the date to play the mode has passed,<br>(3) a bug has occurred. If so, report it, even if you aren't sure.</b><br>Please note: The halloween mode only lasts until Novemeber 1st, then you will experience this error.
-          <br><br>
-          If you are experiencing an error that reads <b>"Cannot fetch date"</b> then it can mean two things,<br><b>(1) your internet is off,<br>(2) a bug has occurred. If so, report it, even if you aren't sure.</b>
-          <br><br>
-          If you are experiencing an error that reads <b>"No Phrases"</b> then it can mean one thing,
-          <br>
-          <b>a bug has occurred and JavaScript isn't assigning the phrases properly.</b>
-          <br><br>
-          If you are experiencing an error that reads <b>"Per-gamemode score setup failed: (extra error info)"</b> inside the <a href="https://google.com/search?q=web+browser+console" rel="noreferer" target="blank_" title="Click me!">console</a> then it can mean one thing,
-          <br>
-          <b>a bug has occurred when showing the score for the gamemode that you last played.</b>
-          <br><br>
-          <p>If you are experiencing an error that reads <b>"Unable to begin bgm playback"</b> this can only mean one thing,
-          <br>
-          <b>a bug has occurred in the proccess of playing the bgm file.</b></p>
-          <br><br>
-          If the game freezes, check the <a href="https://google.com/search?q=how+to+open+web+browser+console+mobile+and+desktop" rel="noreferer" target="blank_" title="Click me!">console</a> and take a screenshot or copy the text into a <a href="https://github.com/bamslam1/french/issues" rel="noreferer" target="blank_" title="Click me then press new issue to create a bug report.">bug report.</a>
-        </p>
-      </div>
+body.seasonal main, body.seasonal2 main, body.seasonal3 main {
+  max-width: 85%;
+  margin: 0 auto;
+}
 
-      <div id="bugs" hidden>
-        <button class="btn" onclick="showStartScreen();">Back</button>
-        <h2>Bugs</h2>
-        <p>
-          1. When in custom mode, adding only two phrases causes only the first one to be displayed every round.
-          <br><br>
-          If you find any more bugs, please report them at <a href="https://github.com/bamslam1/french/issues" rel="noreferer" target="blank_" title="Click me then press new issue to create a bug report.">https://github.com/bamslam1/french/issues</a> and if possible, take a screenshot.
-          <!--<br><br>
-          2. Overlay not applying when playing the halloween mode.
-          <br><br>
-          3. Persistant loading screen when Halloween gamemode button clicked and then clicking other gamemode. This can happen if you set your wifi speed (using Chrome DevTools network tab) and quickly pressing another gamemode. Your gamemode won't get switched if this happens.
-          <br><br>
-          4. The button effects don't apply when using the halloween listen only mode.
-          <br><br>
-          <b>All of these bugs are currently being looked into and will be fixed as soon as possible.</b>-->
-        </p>
-      </div>
+body.seasonal main {
+  padding-top: clamp(32px, 10vw, 80px);
+}
 
-      <div class="filler"></div>
-    </main>
-    </div>
-    <script src="Scripts/script.js" defer></script>
-  </body>
-</html>
+body.seasonal2 main {
+  padding-top: clamp(32px, 6vw, 80px);
+}
+
+body.seasonal3 main {
+  padding-top: 30vh;
+  padding-bottom: 20vh;
+}
+
+#mute {
+  position: fixed;
+  right: 85px;
+  height: fit-content;
+}
+
+.btn, .theme-btn {
+  font: bold 14px verdana;
+  padding: 7.5px 15px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  max-width: 100%;
+  white-space: normal;
+  transition: transform 0.1s;
+}
+
+.btn, .r-btn {
+  transition: transform 0.1s;
+  cursor: not-allowed;
+  filter: brightness(0.5);
+}
+
+.btn-loaded, .theme-btn, .r-btn-loaded {
+  cursor: pointer;
+  filter: none;
+}
+
+.btn-loaded:hover {
+  filter: drop-shadow(2px 3px 0 #4CAF50) brightness(1.1);
+  z-index: 9999;
+}
+
+.btn-loaded:active {
+  transform: translate(2px, 2px);
+  filter: drop-shadow(0 1px 0 #4CAF50);
+}
+
+.r-btn-loaded:hover {
+  filter: drop-shadow(2px 3px 0 #ed2828) brightness(1.1);
+  z-index: 9999;
+}
+
+.r-btn-loaded:active {
+  transform: translate(2px, 2px);
+  filter: drop-shadow(0 1px 0 #ed2828);
+}
+
+input[type="text"] {
+  font: normal 14px verdana;
+  padding: 7px;
+  width: 150px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+input[type="text"]:focus {
+  z-index: 9999;
+}
+
+.listenControls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.listenControls input[type="range"] {
+  width: calc(100% - 180px);
+  max-width: 500px;
+  flex-shrink: 0;
+  padding: 7px;
+  box-sizing: border-box;
+}
+
+input[type="range"] {
+  cursor: grab;
+}
+
+input[type="range"]:active {
+  cursor: grabbing;
+}
+
+.score {
+  top: 0px;
+  right: 10px;
+  position: fixed;
+  font: bold 20px verdana;
+  pointer-events: none;
+  z-index: 9999;
+  color: #ffffff;
+  mix-blend-mode: difference;
+}
+
+.wrongGif {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  cursor: wait;
+}
+
+.rightGif {
+  position: fixed;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  cursor: wait;
+}
+
+.reset-score {
+  top: 50px;
+  right: 50px;
+}
+
+.reset-score2 {
+  top: 50px;
+  right: 150px;
+}
+
+.reset-score-gamemode {
+  font: bold 14px verdana;
+  padding: 7.5px 15px;
+  background-color: #ed2828;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  z-index: 9999;
+}
+
+.reset-score, .reset-score2 {
+  font: bold 10px verdana;
+  padding: 7px 12px;
+  background-color: #ed2828;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  position: fixed;
+  z-index: 9999;
+}
+
+.space {
+  white-space: pre-line;
+}
+
+.bott-right {
+  bottom: 53px;
+  right: 80px;
+  width: 85px;
+  height: 10px;
+  position: fixed;
+  z-index: 9999;
+}
+
+.theme-btn {
+  bottom: 13px;
+  right: 5px;
+  width: 40px;
+  position: fixed;
+  z-index: 9999;
+}
+
+.phrase {
+  font-size: 2rem;
+}
+
+.phrase, #hint {
+  z-index: 99998;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  text-align: center;
+}
+
+#hint {
+  font-size: 1.4rem;
+}
+
+#displayRate {
+  font-size: 1.25rem;
+}
+
+.ver {
+  font: bold 12px monospace;
+  color: #ffffff;
+  mix-blend-mode: difference;
+  position: sticky;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  top: 0px;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.allScore {
+  font: bold 16px, sans-serif;
+  white-space: pre-line;
+}
+
+a,
+a:link,
+a:visited,
+a:hover,
+a:active,
+a:focus {
+  color: var(--hyperlink-color);
+  outline: none;
+  transition: color 0.3s ease;
+}
+
+#items li {
+  flex-wrap: wrap;
+}
+
+main {
+  overflow-wrap: anywhere;
+}
+
+@media (max-height: 600px) {
+  body.seasonal main {
+    max-width: 90%;
+    max-height: 50px;
+    margin: 0 auto;
+  }
+
+  .fillerTop {
+    padding: calc(0px + 3vw);
+  }
+  
+  body.seasonal3 main {
+  padding-top: 15vh;
+  padding-bottom: 10vh;
+  }
+}
+
+@media (max-width: 600px) {
+  body { padding: 0 12px; }
+
+  .btn, .theme-btn {
+    padding: 10px 16px; margin: 4px 0;
+  }
+  input[type="text"] {
+    width: 100%; box-sizing: border-box; font-size: 16px; margin-bottom: 8px;
+  }
+  .wrongGif, .rightGif {
+    max-width: 80vw; height: auto;
+  }
+  .score {
+    top: auto;
+    bottom: 25px;
+    left: 20px;
+  }
+  .reset-score, .reset-score2 {
+    top: auto;
+    bottom: 5px;
+    right: auto;
+  }
+  .reset-score {
+    left: 165px;
+  }
+  .reset-score2 {
+    left: 45px;
+  }
+  .theme-btn {
+  bottom: 0px;
+  right: 5px;
+  width: 40px;
+  position: fixed;
+  z-index: 9999;
+  }
+  .filler {
+  padding: calc(0px + 15vw);
+  }
+  body.seasonal #sOverlay {
+    display: none;
+  }
+  body.seasonal #sOverlay-v {
+    display: block;
+  }
+  body.seasonal2 #sOverlay2 {
+    display: none;
+  }
+  body.seasonal2 #sOverlay2-v {
+    display: block;
+  }
+  body.seasonal3 #sOverlay3 {
+    display: none;
+  }
+  body.seasonal3 #sOverlay3-v {
+    display: block;
+  }
+  body.seasonal3 main {
+    max-width: 75%;
+  }
+  body.seasonal2 main {
+    max-width: 75%;
+  }
+  body.seasonal main {
+    padding-top: calc(0px + 20vw);
+  }
+  .score, .reset-score, .reset-score2 {
+  transform: translate(0px, -60px);
+  }
+  .reset-score:active, .reset-score2:active {
+  transform: translate(2px, -58px);
+  filter: drop-shadow(0 1px 0 #ed2828);
+  }
+}
+
+@media (max-width: 500px) {
+
+}
+
+@media (min-width: 601px) {
+  .answer-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .answer-row input[type="text"] {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
+  #mute {
+  position: static;
+  }
+  body.seasonal #overlay {
+    display: block;
+  }
+  body.seasonal #overlay-v {
+    display: none;
+  }
+}
+
+#error {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  font: bold 30px monospace;
+  z-index: 99999;
+  color: white;
+  mix-blend-mode: difference;
+  pointer-events: none;
+}
+
+.seasonalResult {
+  object-fit: contain;
+  z-index: 9999;
+}
+
+.transitionOut {
+  transition: opacity 0.5s ease;
+  opacity: 1;
+}
+
+.hidden {
+  opacity: 0;
+  /*pointer-events: none;*/
+}
+
+.seasonalResult {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: auto;
+  height: auto;
+  position: fixed;
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.seasonal {
+  height: 95%;
+}
+
+.bg {
+  z-index: -1;
+}
+
+.overlay {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+  z-index: 9998;
+}
