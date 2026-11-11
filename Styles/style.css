@@ -212,19 +212,29 @@ input[type="range"]:active {
   white-space: pre-line;
 }
 
-.bott-right {
-  bottom: 53px;
-  right: 80px;
+.report-btn {
+  font: bold 14px verdana;
+  padding: 7.5px 15px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  max-width: 100%;
+  white-space: normal;
+  transition: transform 0.1s;
+  bottom: 20px;
+  right: 100px;
   width: 85px;
-  height: 10px;
+  height: 50px;
   position: fixed;
   z-index: 9999;
 }
 
 .theme-btn {
-  bottom: 13px;
-  right: 5px;
+  bottom: 20px;
+  right: 25px;
   width: 40px;
+  height: 35px;
   position: fixed;
   z-index: 9999;
 }
@@ -296,7 +306,7 @@ main {
   }
   
   body.seasonal3 main {
-  padding-top: 15vh;
+  padding-top: 25vh;
   padding-bottom: 10vh;
   }
 }
@@ -330,11 +340,20 @@ main {
     left: 45px;
   }
   .theme-btn {
-  bottom: 0px;
+  bottom: 1px;
   right: 5px;
   width: 40px;
+  height: 30px;
   position: fixed;
   z-index: 9999;
+  }
+  .report-btn {
+    bottom: 5px;
+    right: 80px;
+    width: 80px;
+    height: 50px;
+    position: fixed;
+    z-index: 9999;
   }
   .filler {
   padding: calc(0px + 15vw);
