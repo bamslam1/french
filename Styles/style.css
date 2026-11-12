@@ -86,7 +86,20 @@ body.seasonal3 main {
 .btn, .r-btn {
   transition: transform 0.1s;
   cursor: not-allowed;
+  pointer-events: auto;
   filter: brightness(0.5);
+}
+
+.btn-loaded {
+  font: bold 14px verdana;
+  padding: 7.5px 15px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  max-width: 100%;
+  white-space: normal;
+  transition: transform 0.1s;
 }
 
 .btn-loaded, .theme-btn, .r-btn-loaded {
