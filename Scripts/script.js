@@ -28,7 +28,7 @@ async function getServerTime() {
     serverCalendar = [year, month, day, hours, minutes];
   } catch (err) {
     serverCalendar = null;
-    error("Could not fetch remote server time.");
+    error("Unable to fetch date");
   }
   l.hidden = true;
 }
@@ -922,6 +922,11 @@ function checkSeasonal(mode) {
   const shouldShowOverlay2 = activeMode === 'seasonal2' && (isGameVisible || isResultVisible);
   const shouldShowOverlay3 = activeMode === 'seasonal3' && (isGameVisible || isResultVisible);
 
+  // overlays only show on the game/result screen, and only for their own mode
+  document.querySelector('.seasonalOverlay').hidden  = !shouldShowOverlay;
+  document.querySelector('.seasonal2Overlay').hidden = !shouldShowOverlay2;
+  document.querySelector('.seasonal3Overlay').hidden = !shouldShowOverlay3;
+
   document.body.classList.remove('halloween');
   document.body.classList.remove('seasonal');
   document.body.classList.remove('seasonal2');
@@ -1026,9 +1031,10 @@ function error(mes) {
   document.getElementById('error').textContent = mes;
   console.error(mes);
   setTimeout(() => {
+    if (document.getElementById('error').textContent === mes) {
   document.getElementById('error').hidden = true;
+    }
   }, 3000);
-
 }
 
 async function startGame(mode = currentMode) {
@@ -1046,6 +1052,35 @@ async function startGame(mode = currentMode) {
     document.getElementById('displayRate').textContent = speechRate + 'x';
     localStorage.setItem('speechRate', JSON.stringify(speechRate));
   });
+
+    let allowed = true;
+  if (mode === 'seasonal' || mode === 'seasonal2' || mode === 'seasonal3') {
+    await getServerTime();
+    if (!serverCalendar) {
+      error('Unable to fetch date');
+      return
+    }
+    const year = Number(serverCalendar[0]);
+    const month = Number(serverCalendar[1]);
+
+    if (mode === 'seasonal' || mode === 'seasonal2' || mode === 'seasonal3') {
+      allowed = (year < 2027 && month === 11);
+    }/* else if (mode === 'seasonal2') {
+      allowed = (year < 2027 && month === 11);
+    } else if (mode === 'seasonal3') {
+      allowed = (year < 2027 && (month === 11 || month === 10));
+    }*/
+  }
+  
+  if (!allowed) {
+    error('This mode is unavailable');
+    document.querySelectorAll('.btn').forEach(element => {
+    element.classList.add('btn-loaded');
+    });
+    return
+  } else {
+    currentMode = mode;
+  }
 
   currentMode = mode;
   showScore();
@@ -1074,36 +1109,6 @@ async function startGame(mode = currentMode) {
     document.getElementById('hint-btn').hidden = false;
     document.body.classList.remove('seasonal');
     document.querySelector('.reroll').hidden = false;
-  }
-
-  let allowed = true;
-  if (mode === 'seasonal' || mode === 'seasonal2' || mode === 'seasonal3') {
-    await getServerTime();
-    if (!serverCalendar) {
-      error('Unable to fetch date');
-      return
-    }
-    
-    const year = Number(serverCalendar[0]);
-    const month = Number(serverCalendar[1]);
-
-    if (mode === 'seasonal' || mode === 'seasonal2' || mode === 'seasonal3') {
-      allowed = (year < 2027 && month === 11);
-    }/* else if (mode === 'seasonal2') {
-      allowed = (year < 2027 && month === 11);
-    } else if (mode === 'seasonal3') {
-      allowed = (year < 2027 && (month === 11 || month === 10));
-    }*/
-  }
-
-  if (!allowed) {
-    error('This mode is unavailable');
-    document.querySelectorAll('.btn').forEach(element => {
-    element.classList.add('btn-loaded');
-    });
-    return
-  } else {
-    currentMode = mode;
   }
 
   showGameComponents(mode);
@@ -1142,7 +1147,7 @@ try {
   updateScore = function () {
     localStorage.setItem('frenchScores', JSON.stringify(modeScores));
     showScore();
-  };
+  }
 
 function removeFromList() {
   customPhrases.forEach(() => {
@@ -1151,7 +1156,7 @@ function removeFromList() {
   });
   try {document.querySelector('li').remove();}
   catch {};
-};
+}
 
 function custom() {
   document.getElementById("game").hidden = true;
@@ -1295,7 +1300,7 @@ function checkAnswer() {
     storeSavedPhrases();
 
     document.getElementById("result").hidden = false;
-    try {document.getElementById('defineLink').href = currentg.definition;} catch {document.getElementById('defineLink').classList.remove('btn-loaded'); error('Failed to set define button');}
+    try {document.getElementById('defineLink').href = current.definition;} catch {document.getElementById('defineBtn').classList.remove('btn-loaded'); error('Failed to set define button');}
     document.getElementById("goAgain").hidden = false;
     document.getElementById("game").hidden = true;
 
@@ -1490,6 +1495,8 @@ function hint() {
   msg.textContent = `💡 Hint: ${current.hint}`;
 }
 
+const SCREENS = ['startScreen', 'gamemode', 'game', 'result', 'custom', 'abtErrors', 'bugs'];
+
 const ROUTES = {
   bugs: showBugs,
   gamemode: gamemode,
@@ -1498,12 +1505,15 @@ const ROUTES = {
 };
 
 function routeFromHash() {
-  const name = location.hash.slice(1);   // "#bugs" -> "bugs"
-  if (ROUTES[name]) ROUTES[name]();
+  const name = location.hash.slice(1);
+  if (!ROUTES[name]) return;
+
+  SCREENS.forEach(id => document.getElementById(id).hidden = true);
+  ROUTES[name]();
 }
 
-routeFromHash();                          // on page load
-window.addEventListener('hashchange', routeFromHash);  // if the hash changes later
+routeFromHash();
+window.addEventListener('hashchange', routeFromHash);
 
 document.querySelectorAll('.btn, .theme-btn').forEach(element => {
   element.classList.add('btn-loaded');
@@ -1512,3 +1522,12 @@ document.querySelectorAll('.r-btn').forEach(element => {
   element.classList.add('r-btn-loaded');
 });
 document.getElementById('error').hidden = true;
+
+document.addEventListener('click', function(e) {
+  const unloadedBtn = e.target.closest('.btn:not(.btn-loaded)');
+  
+  if (unloadedBtn) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+  }
+}, true);
