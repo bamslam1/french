@@ -102,7 +102,7 @@
         <input type="text" id="userInput" placeholder="Type english here" onkeypress="if(event.key === 'Enter') checkAnswer();"/>
         <button type="game" class="submit btn" onclick="checkAnswer();">Submit</button>
         <button type="game" class="reroll btn" onclick="reroll(false);">Reroll</button>
-        <button type="game" onclick="custom();">Edit Phrases</button>
+        <button type="game" class="btn" onclick="custom();">Edit Phrases</button>
         <button class="btn" onclick="score.hints++; updateScore(); this.hidden = true; hint();" id="hint-btn">Hint</button>
         </div>
       </div>
