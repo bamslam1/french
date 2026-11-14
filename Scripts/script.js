@@ -1,3 +1,9 @@
+let seconds = 0;
+
+let timerId = setInterval(() => {
+  seconds++;
+}, 1000);
+
 const msg = document.querySelector(".phrase");
 
 function load(key, fallback) {
@@ -6,26 +12,51 @@ function load(key, fallback) {
 }
 
 let serverCalendar = null;
+const SERVER_TIME_MAX_AGE_MS = 60 * 60 * 1000;
+let serverAnchor = null;
+
+function anchorIsFresh(a) {
+  return (performance.now() - a.perfMs) < SERVER_TIME_MAX_AGE_MS;
+}
+
+function serverNowMs() {
+  return serverAnchor.serverMs + (performance.now() - serverAnchor.perfMs);
+}
+
+function updateServerCalendar() {
+  const d = new Date(serverNowMs());
+  const p = n => String(n).padStart(2, '0');
+  serverCalendar = [
+    d.getUTCFullYear(),
+    p(d.getUTCMonth() + 1),
+    p(d.getUTCDate()),
+    p(d.getUTCHours()),
+    p(d.getUTCMinutes()),
+    p(d.getUTCSeconds())
+  ];
+}
 
 async function getServerTime() {
+  if (serverAnchor && anchorIsFresh(serverAnchor)) {
+    updateServerCalendar();
+    return;
+  }
+
   const l = document.getElementById('error')
   l.hidden = false;
   l.textContent = 'Loading...'
   try {
     const response = await fetch('https://timeapi.io/api/Time/current/zone?timeZone=America/Whitehorse');
-    
+
     if (!response.ok) throw new Error("API request failed");
-    
+
     const data = await response.json();
 
-    const year = data.year;
-    const month = String(data.month).padStart(2, '0');
-    const day = String(data.day).padStart(2, '0');
-    
-    const hours = String(data.hour).padStart(2, '0');
-    const minutes = String(data.minute).padStart(2, '0');
-
-    serverCalendar = [year, month, day, hours, minutes];
+    serverAnchor = {
+      serverMs: Date.UTC(data.year, data.month - 1, data.day, data.hour, data.minute, data.seconds ?? 0),
+      perfMs: performance.now()
+    };
+    updateServerCalendar();
   } catch (err) {
     serverCalendar = null;
     error("Unable to fetch date");
@@ -33,13 +64,16 @@ async function getServerTime() {
   l.hidden = true;
 }
 
+function getServerClock() {
+  if (!serverAnchor) return null;
+  const d = new Date(serverNowMs());
+  const h = d.getUTCHours(), m = d.getUTCMinutes(), sec = d.getUTCSeconds();
+  return { total: (h * 3600) + (m * 60) + sec, h, m, s: sec };
+}
+
 let prevFrench = null;
 
-let score = load('frenchScore', null) || {
-  wins: 0,
-  losses: 0,
-  hints: 0
-};
+let score = { wins: 0, losses: 0, hints: 0 };
 
 let prevMode = null;
 
@@ -739,11 +773,30 @@ function fadeTo(target, sound, onDone) {
   fadeTimers.set(sound, fadeTimer);
 }
 
+let bgmRetryPending = false;
+
+function retryBgmOnInteraction() {
+  if (bgmRetryPending) return;
+  bgmRetryPending = true;
+  const events = ['click', 'keydown', 'touchend'];
+  const retry = () => {
+    events.forEach(e => window.removeEventListener(e, retry, true));
+    bgmRetryPending = false;
+    checkSeasonal();
+  };
+  events.forEach(e => window.addEventListener(e, retry, true));
+}
+
+function bgmPlayFailed(err) {
+  if (err && err.name === 'NotAllowedError') retryBgmOnInteraction();
+  else error('Unable to begin bgm playback');
+}
+
 function startBgm() {
   playbackRequested.set(bgm, true);
   bgm.play().then(() => {
     if (playbackRequested.get(bgm)) fadeTo(BGM_VOLUME, bgm);
-  }).catch(() => {error('Unable to begin bgm playback')});
+  }).catch(bgmPlayFailed);
 }
 
 function stopBgm() {
@@ -758,7 +811,7 @@ function startBgm2() {
   playbackRequested.set(bgm2, true);
   bgm2.play().then(() => {
     if (playbackRequested.get(bgm2)) fadeTo(BGM_VOLUME, bgm2);
-  }).catch(() => {error('Unable to begin bgm playback')});
+  }).catch(bgmPlayFailed);
 }
 
 function stopBgm2() {
@@ -773,7 +826,7 @@ function startBgm3() {
   playbackRequested.set(bgm3, true);
   bgm3.play().then(() => {
     if (playbackRequested.get(bgm3)) fadeTo(BGM_VOLUME, bgm3);
-  }).catch(() => {error('Unable to begin bgm playback')});
+  }).catch(bgmPlayFailed);
 }
 
 function stopBgm3() {
@@ -827,6 +880,54 @@ function focus() {
 document.getElementById("userInput").focus();
 };
 
+const SCORE_MODES = ['all', 'easy', 'medium', 'hard', 'blitz', 'custom', 'seasonal', 'seasonal2', 'seasonal3'];
+let modeScores = {};
+
+(function loadScores() {
+  const readJSON = key => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } };
+  const num = v => Number(v) || 0;
+  const fresh = src => ({ wins: num(src?.wins), losses: num(src?.losses), hints: num(src?.hints) });
+
+  const saved = readJSON('frenchScores');
+  const old = readJSON('frenchScore');
+
+  for (const m of SCORE_MODES) modeScores[m] = fresh(saved?.[m]);
+  if (saved && typeof saved === 'object') {
+    for (const m of Object.keys(saved)) if (!modeScores[m]) modeScores[m] = fresh(saved[m]);
+  }
+  if (!saved && old) modeScores.all = fresh(old);
+})();
+
+function syncScore() {
+  score = modeScores[currentMode] ??= { wins: 0, losses: 0, hints: 0 };
+}
+
+function showScore() {
+  const labelOf = key => key.charAt(0).toUpperCase() + key.slice(1);
+  const line = (key, s) => key === 'blitz'
+    ? `${labelOf(key)}: Best Streak ${s.wins} | Streak ${s.losses}`
+    : `${labelOf(key)}: Wins ${s.wins} | Losses ${s.losses} | Hints ${s.hints}`;
+
+  const current = document.querySelector('.score');
+  if (current) current.innerHTML = line(currentMode, score);
+
+  const all = document.querySelector('.allScore');
+  if (all) all.innerHTML = SCORE_MODES.filter(k => modeScores[k]).map(k => line(k, modeScores[k])).join('<br>');
+}
+
+function updateScore() {
+  try { localStorage.setItem('frenchScores', JSON.stringify(modeScores)); } catch {}
+  showScore();
+}
+
+function resetScore() {
+  score.wins = 0;
+  score.losses = 0;
+  score.hints = 0;
+  updateScore();
+}
+
+syncScore();
 showScore();
 
 function invalidErr(log) {
@@ -884,16 +985,11 @@ function showScoreBool(bool) {
 }
 
 function resetAllScore() {
-  const MODES = ['all', 'easy', 'medium', 'hard', 'custom', 'seasonal', 'seasonal2', 'seasonal3', 'blitz'];
-
-  MODES.forEach(m => {
-    if (modeScores[m]) {
-      modeScores[m].wins = 0;
-      modeScores[m].losses = 0;
-      if (modeScores[m].hints !== undefined) modeScores[m].hints = 0;
-    }
+  Object.values(modeScores).forEach(s => {
+    s.wins = 0;
+    s.losses = 0;
+    s.hints = 0;
   });
-
   updateScore();
 }
 
@@ -922,7 +1018,6 @@ function checkSeasonal(mode) {
   const shouldShowOverlay2 = activeMode === 'seasonal2' && (isGameVisible || isResultVisible);
   const shouldShowOverlay3 = activeMode === 'seasonal3' && (isGameVisible || isResultVisible);
 
-  // overlays only show on the game/result screen, and only for their own mode
   document.querySelector('.seasonalOverlay').hidden  = !shouldShowOverlay;
   document.querySelector('.seasonal2Overlay').hidden = !shouldShowOverlay2;
   document.querySelector('.seasonal3Overlay').hidden = !shouldShowOverlay3;
@@ -1037,10 +1132,24 @@ function error(mes) {
   }, 3000);
 }
 
+let internalHash = null;
+function setHashQuietly(name) {
+  if (location.hash === '#' + name) return;
+  internalHash = name;
+  location.hash = name;
+}
+
 async function startGame(mode = currentMode) {
-  document.querySelectorAll('.btn').forEach(element => {
-  element.classList.remove('btn-loaded');
-  });
+  const LOADING_BTNS = '.btn, #gamemode button';
+  const dimmed = [...document.querySelectorAll(LOADING_BTNS)].filter(el => el.classList.contains('btn-loaded'));
+  const restoreButtons = () => dimmed.forEach(el => el.classList.add('btn-loaded'));
+  dimmed.forEach(el => el.classList.remove('btn-loaded'));
+
+  const backToGamemodes = text => {
+    restoreButtons();
+    error(text);
+    gamemode();
+  };
   const slider = document.getElementById('speechRate');
 
   slider.value = speechRate * 10;
@@ -1057,11 +1166,14 @@ async function startGame(mode = currentMode) {
   if (mode === 'seasonal' || mode === 'seasonal2' || mode === 'seasonal3') {
     await getServerTime();
     if (!serverCalendar) {
+      restoreButtons();
       error('Unable to fetch date');
+      gamemode();
       return
     }
     const year = Number(serverCalendar[0]);
     const month = Number(serverCalendar[1]);
+    const clock = getServerClock();
 
     if (mode === 'seasonal' || mode === 'seasonal2' || mode === 'seasonal3') {
       allowed = (year < 2027 && month === 11);
@@ -1073,17 +1185,17 @@ async function startGame(mode = currentMode) {
   }
   
   if (!allowed) {
+    restoreButtons();
     error('This mode is unavailable');
-    document.querySelectorAll('.btn').forEach(element => {
-    element.classList.add('btn-loaded');
-    });
+    gamemode();
     return
-  } else {
-    currentMode = mode;
   }
 
+  setHashQuietly('game');
   currentMode = mode;
-  showScore();
+  syncScore();
+  if (mode === 'blitz') score.losses = 0;
+  updateScore();
   document.querySelector('.seasonalOverlay').hidden = true;
   document.querySelector('.seasonal2Overlay').hidden = true;
   document.querySelector('.seasonal3Overlay').hidden = true;
@@ -1122,32 +1234,8 @@ async function startGame(mode = currentMode) {
   } else {
     pickPhrase();
   }
-  document.querySelectorAll('.btn').forEach(element => {
-  element.classList.add('btn-loaded');
-  });
+  restoreButtons();
 }
-
-let modeScores = {};
-try {
-  const MODES = ['all', 'easy', 'medium', 'hard', 'custom', 'seasonal', 'seasonal2', 'seasonal3'];
-  const readJSON = key => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } };
-  const num = v => Number(v) || 0;
-
-  const savedScores = readJSON('frenchScores');
-  const oldScore = readJSON('frenchScore');
-  for (const m of MODES) {
-    modeScores[m] = { wins: num(savedScores?.[m]?.wins), losses: num(savedScores?.[m]?.losses) };
-  }
-  if (!savedScores && oldScore) {
-    modeScores.all = { wins: num(oldScore.wins), losses: num(oldScore.losses), hints: 0 };
-  }
-
-  const scoreOfCurrentMode = () => (modeScores[currentMode] ??= { wins: 0, losses: 0, hints: 0 });
-
-  updateScore = function () {
-    localStorage.setItem('frenchScores', JSON.stringify(modeScores));
-    showScore();
-  }
 
 function removeFromList() {
   customPhrases.forEach(() => {
@@ -1179,7 +1267,9 @@ function custom() {
 
     const actionButton = document.createElement('button');
     actionButton.textContent = 'Remove';
-    actionButton.style.backgroundColor = 'red';
+    actionButton.classList.add('r-btn-loaded');
+    actionButton.classList.add('reset-score-gamemode');
+    actionButton.classList.add('r-btn');
 
     actionButton.addEventListener('click', () => {
       deletePhrase(index);
@@ -1192,48 +1282,6 @@ function custom() {
     listContainer.appendChild(listItem);
   });
 };
-
-showScore = function () {
-    const targetParents = ['all', 'easy', 'medium', 'hard', 'custom', 'seasonal', 'seasonal2', 'seasonal3', 'blitz'];
-    let scoreLines = [];
-
-    targetParents.forEach(key => {
-      const mode = modeScores[key];
-      if (mode) {
-        mode.hints ??= 0;
-        const modeLabel = key.charAt(0).toUpperCase() + key.slice(1);
-        
-        if (key === 'blitz') {
-          scoreLines.push(`${modeLabel}: Best Streak ${mode.wins} | Streak ${mode.losses}`);
-        } else {
-          scoreLines.push(`${modeLabel}: Wins ${mode.wins} | Losses ${mode.losses} | Hints ${mode.hints}`);
-        }
-      }
-    });
-
-    const label = currentMode.charAt(0).toUpperCase() + currentMode.slice(1);
-    
-    if (currentMode === 'blitz') {
-      document.querySelector('.score').innerHTML = `${label}: Best Streak ${score.wins} | Streak ${score.losses}`;
-    } else {
-      document.querySelector('.score').innerHTML = `${label}: Wins ${score.wins} | Losses ${score.losses} | Hints: ${score.hints}`;
-    }
-
-    document.querySelector('.allScore').innerHTML = scoreLines.join('<br>');
-};
-
-  score = scoreOfCurrentMode();
-  showScore();
-} catch (err) {
-  console.error('Per-gamemode score setup failed:', err);
-}
-
-if (score.hints = null) {score.hints = 0;}
-
-function showScore() {
-    const label = currentMode ? (currentMode.charAt(0).toUpperCase() + currentMode.slice(1)) : 'All';
-    document.querySelector('.score').innerHTML = `${label}: Best Streak ${score.wins} | Streak ${score.losses}`;
-}
 
 function endGameBlitz(resultMsg) {
   if (blitzInterval) clearInterval(blitzInterval);
@@ -1249,11 +1297,10 @@ function endGameBlitz(resultMsg) {
   "YOUR ANSWER: " + userInput + "\n" +
   "ANSWER: " + current.answers.join(" / ");
 
-  if (score.losses > score.wins) {
-    score.wins = score.losses;
-  }
-  
-  resultMsg.textContent = `Time's Up! Streak: ${score.losses} | Best Streak: ${score.wins}`;
+  const finalStreak = score.losses;
+  if (finalStreak > score.wins) score.wins = finalStreak;
+
+  resultMsg.textContent = `Time's Up! Streak: ${finalStreak} | Best Streak: ${score.wins}`;
 
   score.losses = 0;
   updateScore();
@@ -1270,9 +1317,6 @@ function checkAnswer() {
   if (baseMode === 'blitz') {
     if (!userInput.trim()) {
       soundRoll.play();
-      if (score.losses > score.wins) score.wins = score.losses;
-      score.losses = 0;
-      updateScore();
       pickPhrase();
       document.getElementById('userInput').value = '';
       return
@@ -1284,11 +1328,6 @@ function checkAnswer() {
       pickPhrase();
       updateScore();
     } else {
-      if (score.losses > score.wins) {
-        score.wins = score.losses;
-      }
-      score.losses = 0;
-      updateScore();
       endGameBlitz(result);
       try {soundJeopardy.pause(); soundJeopardy.currentTime = 0;} catch {error('Unable to stop sound')}
     }
@@ -1345,6 +1384,7 @@ function showAnswers() {
     document.querySelector(".correct-answer").textContent =
     `PHRASE: ${current.french}\nYOUR ANSWER: ${userInput}\nCORRECT ANSWERS: ${current.answers.join(" / ")}`;
   document.getElementById("userInput").value = '';
+  document.getElementById('goAgain').focus();
 }
 
 function reroll() {
@@ -1379,6 +1419,7 @@ function normalize(text) {
 }
 
 function gamemode() {
+  window.location.hash = 'gamemode';
   try {stopBgm();}
   catch {
     try {stopBgm2();}
@@ -1432,29 +1473,7 @@ function startBlitzCountdown() {
       timerElement.innerHTML = `Time Left: <b>${timeLeft}s</b>`;
       
       if (timeLeft <= 0) {
-        clearInterval(blitzInterval);
-        
-        const userInput = document.getElementById('userInput').value;
-        document.getElementById("result").hidden = false;
-        document.getElementById("goAgain").hidden = false;
-        document.getElementById("game").hidden = true;
-
-        prevFrench = current.french;
-        
-        const result = document.querySelector(".result-message");
-        const answerElement = document.querySelector(".correct-answer");
-        answerElement.textContent = "PHRASE: " + current.french + "\n" +
-        "YOUR ANSWER: " + userInput + "\n" +
-        "ANSWER: " + current.answers.join(" / ");
-        
-        if (score.losses < score.wins) {
-          score.losses = score.wins;
-        }
-
-        result.textContent = "Time's Up!";
-        
-        score.wins = 0;
-        updateScore();
+        endGameBlitz(document.querySelector(".result-message"));
       }
     } else {
       clearInterval(blitzInterval);
@@ -1495,21 +1514,37 @@ function hint() {
   msg.textContent = `💡 Hint: ${current.hint}`;
 }
 
+async function copyLink() {
+  const btn = document.getElementById('urlCopy');
+  const text = 'https://bamslam1.github.io/french';
+  try {
+    await navigator.clipboard.writeText(text);
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy URL', 1500);
+  } catch (err) {
+    console.error(err);
+    error('Copy failed');
+  }
+}
+
 const SCREENS = ['startScreen', 'gamemode', 'game', 'result', 'custom', 'abtErrors', 'bugs'];
 
 const ROUTES = {
   bugs: showBugs,
   gamemode: gamemode,
   start: showStartScreen,
-  errors: showAbtErrors
+  errors: showAbtErrors,
+  game: startGame
 };
 
 function routeFromHash() {
   const name = location.hash.slice(1);
-  if (!ROUTES[name]) return;
+  if (internalHash === name) { internalHash = null; return; }
+  if (!ROUTES[name]) {document.getElementById('startScreen').hidden = false; setHashQuietly('start'); return}
 
   SCREENS.forEach(id => document.getElementById(id).hidden = true);
   ROUTES[name]();
+  
 }
 
 routeFromHash();
@@ -1521,7 +1556,7 @@ document.querySelectorAll('.btn, .theme-btn').forEach(element => {
 document.querySelectorAll('.r-btn').forEach(element => {
   element.classList.add('r-btn-loaded');
 });
-document.getElementById('error').hidden = true;
+
 
 document.addEventListener('click', function(e) {
   const unloadedBtn = e.target.closest('.btn:not(.btn-loaded)');
@@ -1531,3 +1566,5 @@ document.addEventListener('click', function(e) {
     e.stopImmediatePropagation();
   }
 }, true);
+
+document.getElementById('error').hidden = true;
