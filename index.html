@@ -190,6 +190,8 @@
         <p>
           1. Audio doesn't play immediatly when loading directly to a hash (e.g.  <a href="https://bamslam1.github.io/french/#game">https://bamslam1.github.io/french/#game</a>) due to browser restrictions. <b>(UNFIXABLE)</b>
           <br><br>
+          1. Manually altering the URL bar to navigate away from the #game hash to any hash other than #gamemode causes a routing and state synchronization glitch in the application. While the site successfully transitions to the newly requested view, the active limited-time gamemode configurations fail to unmount or tear down properly. As a result, the thematic visual elements and background effects of that specific mode continue to display persistently on top of the new page instead of clearing out as intended. <b>(NOT FIXED)</b>
+          <br><br>
           If you find any more bugs, please report them at <a href="https://github.com/bamslam1/french/issues" rel="noreferer" target="blank_" title="Click me then press new issue to create a bug report.">https://github.com/bamslam1/french/issues</a> and if possible, take a screenshot.
         </p>
       </div>
