@@ -11,9 +11,18 @@ function load(key, fallback) {
   catch { return fallback; }
 }
 
-let serverCalendar = null;
-const SERVER_TIME_MAX_AGE_MS = 60 * 60 * 1000;
-let serverAnchor = null;
+let serverCalendar = null;   // [year, month, day, hours, minutes, seconds] as strings (year is a number)
+
+// The server time is fetched once and kept as an "anchor": the server's time
+// plus performance.now() at that moment. After that the current server time is
+// counted locally:
+//   serverNow = anchor.serverMs + (performance.now() - anchor.perfMs)
+// performance.now() is a monotonic timer, so changing the computer's date/time
+// does NOT move it (Date.now() would). It restarts on every page load, so the
+// anchor lives in memory only and a reload fetches the time again.
+// Fetch again after this long, in case the computer slept (the timer can pause).
+const SERVER_TIME_MAX_AGE_MS = 60 * 60 * 1000;   // 1 hour
+let serverAnchor = null;                         // { serverMs, perfMs }
 
 function anchorIsFresh(a) {
   return (performance.now() - a.perfMs) < SERVER_TIME_MAX_AGE_MS;
@@ -23,6 +32,8 @@ function serverNowMs() {
   return serverAnchor.serverMs + (performance.now() - serverAnchor.perfMs);
 }
 
+// Rebuild serverCalendar from the anchor (the anchor holds the server's
+// wall-clock time in UTC fields, so the getUTC* methods give the server's clock).
 function updateServerCalendar() {
   const d = new Date(serverNowMs());
   const p = n => String(n).padStart(2, '0');
@@ -37,6 +48,7 @@ function updateServerCalendar() {
 }
 
 async function getServerTime() {
+  // already have a recent anchor from this page load: no network request
   if (serverAnchor && anchorIsFresh(serverAnchor)) {
     updateServerCalendar();
     return;
@@ -64,6 +76,7 @@ async function getServerTime() {
   l.hidden = true;
 }
 
+// Current server time of day, counted locally from the anchor.
 function getServerClock() {
   if (!serverAnchor) return null;
   const d = new Date(serverNowMs());
@@ -73,7 +86,7 @@ function getServerClock() {
 
 let prevFrench = null;
 
-let score = { wins: 0, losses: 0, hints: 0 };
+let score = { wins: 0, losses: 0, hints: 0 }; // re-pointed at the current mode's scores by syncScore()
 
 let prevMode = null;
 
@@ -773,6 +786,10 @@ function fadeTo(target, sound, onDone) {
   fadeTimers.set(sound, fadeTimer);
 }
 
+// Browsers refuse to play audio until the user has interacted with the page.
+// When the site is opened straight onto #game there has been no interaction yet,
+// so the first play() is rejected. Instead of showing an error, wait for the
+// first click / key press / tap and then start the music.
 let bgmRetryPending = false;
 
 function retryBgmOnInteraction() {
@@ -782,7 +799,7 @@ function retryBgmOnInteraction() {
   const retry = () => {
     events.forEach(e => window.removeEventListener(e, retry, true));
     bgmRetryPending = false;
-    checkSeasonal();
+    checkSeasonal();   // starts the right track if a seasonal game is still showing and not muted
   };
   events.forEach(e => window.addEventListener(e, retry, true));
 }
@@ -837,6 +854,40 @@ function stopBgm3() {
   });
 }
 
+function stopJeopardy() {
+  try {
+    soundJeopardy.pause();
+    playbackRequested.set(soundJeopardy, false);
+    soundJeopardy.currentTime = 0;
+    soundJeopardy.muted = false;
+  } catch {}
+}
+
+let bgmPausedByHide = [];
+
+function pauseBgmWhileHidden() {
+  bgmPausedByHide = [bgm, bgm2, bgm3].filter(s => playbackRequested.get(s) && !s.paused);
+  bgmPausedByHide.forEach(s => s.pause());
+  soundJeopardy.muted = true;
+}
+
+function resumeBgmAfterHidden() {
+  soundJeopardy.muted = false;
+  const toResume = bgmPausedByHide;
+  bgmPausedByHide = [];
+  toResume.forEach(s => {
+    if (!playbackRequested.get(s)) return;
+    s.play().then(() => {
+      if (playbackRequested.get(s)) fadeTo(BGM_VOLUME, s);
+    }).catch(bgmPlayFailed);
+  });
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) pauseBgmWhileHidden();
+  else resumeBgmAfterHidden();
+});
+
 const KEY = "customPhrases";
 
 let backToScreen = 0;
@@ -844,6 +895,15 @@ let backToScreen = 0;
 const phrasesByMode = { all: allPhrases, easy: easyPhrases, medium: mediumPhrases, hard: hardPhrases, blitz: allPhrases, custom: customPhrases, seasonal: seasonalPhrases, seasonal2: seasonal2Phrases, seasonal3: seasonal3Phrases };
 
 let currentMode = load('frenchGamemode', 'all');
+
+// Blitz and Listen only are checkboxes on the gamemode screen. They combine with
+// any gamemode (Easy, Medium, Hard, All, Custom, the limited-time ones).
+let blitzOn = load('frenchBlitz', false) === true;
+let listenOnly = load('frenchListenOnly', false) === true;
+if (currentMode === 'blitz') {   // old saves had Blitz as its own mode
+  currentMode = 'all';
+  blitzOn = true;
+}
 
 let phrases = phrasesByMode[currentMode];
 
@@ -880,7 +940,12 @@ function focus() {
 document.getElementById("userInput").focus();
 };
 
-const SCORE_MODES = ['all', 'easy', 'medium', 'hard', 'blitz', 'custom', 'seasonal', 'seasonal2', 'seasonal3'];
+// ---------- Scores ----------
+// One { wins, losses, hints } object per mode combination, saved under 'frenchScores'.
+// Blitz combinations reuse the fields: wins = best streak, losses = current streak.
+const BASE_MODES = ['all', 'easy', 'medium', 'hard', 'custom', 'seasonal', 'seasonal2', 'seasonal3'];
+const MODE_VARIANTS = ['', '_blitz', '_listen', '_blitzListen'];
+const SCORE_MODES = BASE_MODES.flatMap(m => MODE_VARIANTS.map(v => `${m}${v}`));
 let modeScores = {};
 
 (function loadScores() {
@@ -892,24 +957,49 @@ let modeScores = {};
   const old = readJSON('frenchScore');
 
   for (const m of SCORE_MODES) modeScores[m] = fresh(saved?.[m]);
+
+  // Migrate legacy global blitz/listen scores into 'all_*' if they haven't been created yet
   if (saved && typeof saved === 'object') {
-    for (const m of Object.keys(saved)) if (!modeScores[m]) modeScores[m] = fresh(saved[m]);
+    if (saved.blitz && !saved.all_blitz) modeScores.all_blitz = fresh(saved.blitz);
+    if (saved.listen && !saved.all_listen) modeScores.all_listen = fresh(saved.listen);
+    if (saved.blitzListen && !saved.all_blitzListen) modeScores.all_blitzListen = fresh(saved.blitzListen);
   }
+
   if (!saved && old) modeScores.all = fresh(old);
 })();
 
+// Point `score` at the object for the exact mode combination being played.
+// Call this every time currentMode, blitzOn, or listenOnly changes.
+function scoreKey() {
+  let suffix = '';
+  if (blitzOn && listenOnly) suffix = '_blitzListen';
+  else if (blitzOn) suffix = '_blitz';
+  else if (listenOnly) suffix = '_listen';
+  return `${currentMode}${suffix}`;
+}
+
 function syncScore() {
-  score = modeScores[currentMode] ??= { wins: 0, losses: 0, hints: 0 };
+  score = modeScores[scoreKey()] ??= { wins: 0, losses: 0, hints: 0 };
 }
 
 function showScore() {
-  const labelOf = key => key.charAt(0).toUpperCase() + key.slice(1);
-  const line = (key, s) => key === 'blitz'
+  const VARIANT_LABELS = {
+    blitz: 'Blitz',
+    listen: 'Listen only',
+    blitzListen: 'Blitz + Listen only'
+  };
+  const labelOf = key => {
+    const [base, variant] = key.split('_');
+    const baseName = base.charAt(0).toUpperCase() + base.slice(1);
+    return variant ? `${baseName} (${VARIANT_LABELS[variant] || variant})` : baseName;
+  };
+  const isBlitzKey = key => key.endsWith('_blitz') || key.endsWith('_blitzListen');
+  const line = (key, s) => isBlitzKey(key)
     ? `${labelOf(key)}: Best Streak ${s.wins} | Streak ${s.losses}`
     : `${labelOf(key)}: Wins ${s.wins} | Losses ${s.losses} | Hints ${s.hints}`;
 
   const current = document.querySelector('.score');
-  if (current) current.innerHTML = line(currentMode, score);
+  if (current) current.innerHTML = line(scoreKey(), score);
 
   const all = document.querySelector('.allScore');
   if (all) all.innerHTML = SCORE_MODES.filter(k => modeScores[k]).map(k => line(k, modeScores[k])).join('<br>');
@@ -929,6 +1019,34 @@ function resetScore() {
 
 syncScore();
 showScore();
+// ---------- end scores ----------
+
+// ---------- Blitz / Listen only checkboxes ----------
+(function setupToggles() {
+  const blitzBox = document.getElementById('blitzToggle');
+  const listenBox = document.getElementById('listenToggle');
+  const save = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} };
+
+  if (blitzBox) {
+    blitzBox.checked = blitzOn;
+    blitzBox.addEventListener('change', () => {
+      blitzOn = blitzBox.checked;
+      save('frenchBlitz', blitzOn);
+      syncScore();          // switch the score line to the active mode combination
+      showScore();
+    });
+  }
+  if (listenBox) {
+    listenBox.checked = listenOnly;
+    listenBox.addEventListener('change', () => {
+      listenOnly = listenBox.checked;
+      save('frenchListenOnly', listenOnly);
+      syncScore();          // switch the score line to the active mode combination
+      showScore();
+    });
+  }
+})();
+// ---------- end checkboxes ----------
 
 function invalidErr(log) {
   document.querySelector('.submit').hidden = true;
@@ -1018,6 +1136,7 @@ function checkSeasonal(mode) {
   const shouldShowOverlay2 = activeMode === 'seasonal2' && (isGameVisible || isResultVisible);
   const shouldShowOverlay3 = activeMode === 'seasonal3' && (isGameVisible || isResultVisible);
 
+  // overlays only show on the game/result screen, and only for their own mode
   document.querySelector('.seasonalOverlay').hidden  = !shouldShowOverlay;
   document.querySelector('.seasonal2Overlay').hidden = !shouldShowOverlay2;
   document.querySelector('.seasonal3Overlay').hidden = !shouldShowOverlay3;
@@ -1140,11 +1259,13 @@ function setHashQuietly(name) {
 }
 
 async function startGame(mode = currentMode) {
+  // dim every button (including the gamemode screen's) until loading is done
   const LOADING_BTNS = '.btn, #gamemode button';
   const dimmed = [...document.querySelectorAll(LOADING_BTNS)].filter(el => el.classList.contains('btn-loaded'));
   const restoreButtons = () => dimmed.forEach(el => el.classList.add('btn-loaded'));
   dimmed.forEach(el => el.classList.remove('btn-loaded'));
 
+  // couldn't start this mode: put the buttons back and return to the gamemode screen
   const backToGamemodes = text => {
     restoreButtons();
     error(text);
@@ -1173,15 +1294,11 @@ async function startGame(mode = currentMode) {
     }
     const year = Number(serverCalendar[0]);
     const month = Number(serverCalendar[1]);
-    const clock = getServerClock();
+    const clock = getServerClock();   // clock.h / clock.m / clock.s = server time right now
 
     if (mode === 'seasonal' || mode === 'seasonal2' || mode === 'seasonal3') {
       allowed = (year < 2027 && month === 11);
-    }/* else if (mode === 'seasonal2') {
-      allowed = (year < 2027 && month === 11);
-    } else if (mode === 'seasonal3') {
-      allowed = (year < 2027 && (month === 11 || month === 10));
-    }*/
+    }
   }
   
   if (!allowed) {
@@ -1194,14 +1311,17 @@ async function startGame(mode = currentMode) {
   setHashQuietly('game');
   currentMode = mode;
   syncScore();
-  if (mode === 'blitz') score.losses = 0;
+  if (blitzOn) score.losses = 0;
   updateScore();
   document.querySelector('.seasonalOverlay').hidden = true;
   document.querySelector('.seasonal2Overlay').hidden = true;
   document.querySelector('.seasonal3Overlay').hidden = true;
-  
+
   document.getElementById('timer-display').hidden = true;
   document.getElementById('hint').textContent = null;
+  document.getElementById('hint-btn').hidden = blitzOn;      // no hints or rerolls in Blitz
+  document.querySelector('.reroll').hidden = blitzOn;
+
   if (mode === 'seasonal') {
     document.querySelector('.seasonalOverlay').hidden = false;
   } else if (mode === 'seasonal2') {
@@ -1209,18 +1329,21 @@ async function startGame(mode = currentMode) {
   } else if (mode === 'seasonal3') {
     try { document.querySelector('.seasonal3Overlay').hidden = false; }
     catch {}
-  } else if (mode === 'blitz') {
+  } else {
+    document.body.classList.remove('seasonal');
+  }
+
+  if (blitzOn) {
     document.getElementById('timer-display').textContent = 'Loading...';
     document.getElementById('timer-display').hidden = false;
-    document.querySelector('.reroll').hidden = true;
-    document.getElementById('hint-btn').hidden = true;
     blitzStartTime = performance.now();
     startBlitzCountdown();
-    soundJeopardy.play();
-  } else {
-    document.getElementById('hint-btn').hidden = false;
-    document.body.classList.remove('seasonal');
-    document.querySelector('.reroll').hidden = false;
+    // the limited-time modes have their own music, so skip the countdown music there
+    if (!mode.includes('seasonal')) {
+      playbackRequested.set(soundJeopardy, true);
+      soundJeopardy.muted = document.hidden;
+      soundJeopardy.play().catch(() => {});
+    }
   }
 
   showGameComponents(mode);
@@ -1228,9 +1351,9 @@ async function startGame(mode = currentMode) {
   localStorage.setItem('frenchGamemode', JSON.stringify(mode));
 
   const saved = savedPhrases[mode];
-  if (saved) {
+  if (saved && !blitzOn) {         // Blitz always starts on a fresh phrase
     current = saved;
-    msg.textContent = current.french;
+    showPhrase();
   } else {
     pickPhrase();
   }
@@ -1285,6 +1408,7 @@ function custom() {
 
 function endGameBlitz(resultMsg) {
   if (blitzInterval) clearInterval(blitzInterval);
+  stopJeopardy();
   const userInput = document.getElementById('userInput').value;
   document.getElementById("result").hidden = false;
   document.getElementById("goAgain").hidden = false;
@@ -1307,14 +1431,14 @@ function endGameBlitz(resultMsg) {
 }
 
 function checkAnswer() {
-  if (blitzInterval && currentMode !== 'blitz') clearInterval(blitzInterval);
+  if (blitzInterval && !blitzOn) clearInterval(blitzInterval);
 
   const userInput = document.getElementById("userInput").value;
   const isCorrect = current.answers.some(a => normalize(a) === normalize(userInput));
   const result = document.querySelector(".result-message");
   const baseMode = currentMode.replace("Listen", "");
   
-  if (baseMode === 'blitz') {
+  if (blitzOn) {
     if (!userInput.trim()) {
       soundRoll.play();
       pickPhrase();
@@ -1329,7 +1453,6 @@ function checkAnswer() {
       updateScore();
     } else {
       endGameBlitz(result);
-      try {soundJeopardy.pause(); soundJeopardy.currentTime = 0;} catch {error('Unable to stop sound')}
     }
   } else {
     if (!userInput.trim()) {
@@ -1389,7 +1512,7 @@ function showAnswers() {
 
 function reroll() {
   soundRoll.play();
-  if (currentMode !== 'blitz') {
+  if (!blitzOn) {
     document.querySelector(".result-message").textContent = '';
     showAnswers();
     document.getElementById("game").hidden = true;
@@ -1402,6 +1525,18 @@ function reroll() {
   pickPhrase();
 }
 
+// Shows the current phrase, or in Listen only mode hides it and says it out loud.
+function showPhrase() {
+  if (!listenOnly) {
+    msg.textContent = current.french;
+    return;
+  }
+  msg.textContent = '🎧 Listen and type what you hear';
+  if (!document.getElementById('game').hidden) {
+    try { speak(); } catch {}
+  }
+}
+
 function pickPhrase() {
   let next;
   do {
@@ -1411,7 +1546,7 @@ function pickPhrase() {
   prevFrench = current.french;
   savedPhrases[currentMode] = current;
   storeSavedPhrases();
-  msg.textContent = current.french;
+  showPhrase();
 }
 
 function normalize(text) {
@@ -1427,8 +1562,7 @@ function gamemode() {
       console.warn("Failed to stop BGM or BGM is inactive");
     }
   }
-  soundJeopardy.pause()
-  soundJeopardy.currentTime = 0;
+  stopJeopardy();
   try {
     clearInterval(blitzInterval);
   } catch {};
@@ -1447,14 +1581,6 @@ function showAbtErrors() {
     document.getElementById('abtErrors').hidden = false;
 }
 
-function startFade(element, ms) {
-  setTimeout(() => {
-    if (mouseIn === true) {
-    element.classList.add('hidden');
-    };
-  }, ms);
-}
-
 let speechRate = load('speechRate', 0.9);
 let blitzStartTime = 0;
 
@@ -1466,7 +1592,7 @@ function startBlitzCountdown() {
   if (!timerElement) return
 
   blitzInterval = setInterval(() => {
-    if (currentMode === 'blitz') {
+    if (blitzOn) {
       const elapsedTime = (performance.now() - blitzStartTime) / 1000;
       const timeLeft = Math.max(0, Math.ceil(INITIAL_TIMER_SECONDS - elapsedTime));
       
@@ -1491,15 +1617,8 @@ function showBugs() {
   document.getElementById('bugs').hidden = false;
 }
 
-/*function tutorial() {
-  let showAgain = load('tutorialBlitz', 'true');
-  if ()
-  document.getElementById('tutorial').hidden = false;
-  document.getElementById('tutorial').hidden = false;
-}*/
-
 function hint() {
-  if (currentMode === 'blitz') return
+  if (blitzOn) return
   
   const msg = document.getElementById('hint');
   msg.hidden = false;
