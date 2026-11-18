@@ -108,13 +108,13 @@ body.seasonal3 main {
 }
 
 .btn-loaded:hover {
-  filter: drop-shadow(2px 3px 0 #4CAF50) brightness(1.1);
+  box-shadow: inset 0 0 0 2px #ccc;
   z-index: 9999;
 }
 
 .btn-loaded:active {
-  transform: translate(2px, 2px);
-  filter: drop-shadow(0 1px 0 #4CAF50);
+  box-shadow: inset 0 0 0 3px #ffffff;
+  z-index: 9999;
 }
 
 .r-btn-loaded:hover {
@@ -200,7 +200,7 @@ input[type="range"]:active {
   right: 150px;
 }
 
-.reset-score-gamemode {
+.red {
   font: bold 14px verdana;
   padding: 7.5px 15px;
   background-color: #ed2828;
@@ -495,4 +495,18 @@ main {
   object-fit: fill;
   pointer-events: none;
   z-index: 9998;
+}
+
+.opt {
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+
+.opt input {
+  accent-color: #4CAF50;
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+  margin-right: 6px;
+  cursor: pointer;
 }
