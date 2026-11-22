@@ -34,171 +34,201 @@
         <a href="https://github.com/bamslam1/french/issues">https://github.com/bamslam1/french/issues</a> to report a bug.
       </p>
     </noscript>
-    
-    <input type="radio" name="theme-group" id="force-dark" class="theme-trigger">
-    <input type="radio" name="theme-group" id="force-light" class="theme-trigger">
 
-    <label for="force-dark" class="btn-dark theme-btn">Dark Mode</label>
-    <label for="force-light" class="btn-light theme-btn">Light Mode</label>
+    <div class="js-off" hidden>
+      <input type="radio" name="theme-group" id="force-dark" class="theme-trigger">
+      <input type="radio" name="theme-group" id="force-light" class="theme-trigger">
 
-    <p class="ver">v12.0.1</p>
+      <label for="force-dark" class="custom-button btn-dark btn">Switch to Dark Mode</label>
+      <label for="force-light" class="custom-button btn-light btn">Switch to Light Mode</label>
+    </div>
+
+    <div class="page-content">
+      <select class="select">
+        <option value="" selected disabled style="cursor: not-allowed;">Theme (Beta)</option>
+        <!--<option data-valid value="white">Disabled</option>-->
+        <option for="force-dark" data-valid value="black" style="background-color: black; color: white;">Black</option>
+        <option data-valid value="white" style="background-color: white;">White</option>
+        <option data-valid value="blue" style="background-color: blue; color: white;">Blue</option>
+        <option data-valid value="red" style="background-color: red;">Red</option>
+        <option data-valid value="green" style="background-color: green;">Green</option>
+        <option data-valid value="limegreen" style="background-color: limegreen;">Light Green</option>
+        <option data-valid value="purple" style="background-color: purple; color: white;">Purple</option>
+        <option data-valid value="yellow" style="background-color: yellow;">Yellow</option>
+      </select>
+    </div>
+
+    <p class="ver">v12.0.2</p>
     <div class="page-content">
     <!--<div class="scoreGroup transitionOut" onmouseenter="mouseIn = true; setTimeout(() => {}, 3000); if (mouseIn === true) {startFade(this, 2000);};" onmouseleave="mouseIn = false; this.classList.remove('hidden');">-->
-    <p class="score">Loading...</p>
-    <button class="reset-score r-btn" onclick="score.wins = 0; score.losses = 0; updateScore();">Reset Score</button>
-    <button class="reset-score2 r-btn" onclick="resetAllScore();">Reset All Score</button>
-    <a href="https://github.com/bamslam1/french/issues" target="_blank" rel="noopener noreferer" class="report-a"><button class="report-btn btn-loaded" title="Press new issue to create a report">Report a Bug</button></a>
-    <p id="error">Loading...</p>
-    <main>
-      <img src="Images\November\remember-overlay.png" class="overlay seasonalOverlay" id="sOverlay" hidden>
-      <img src="Images\November\remember-vertical.png" class="overlay seasonalOverlay-v" id="sOverlay-v" hidden>
-      <img src="Images\November\thanksgiving-overlay.png" class="overlay seasonal2Overlay" id="sOverlay2" hidden>
-      <img src="Images\November\thanksgiving-vertical.png" class="overlay seasonal2Overlay-v" id="sOverlay2-v" hidden>
-      <img src="Images\November\gtaVi.png" class="overlay seasonal3Overlay" id="sOverlay3" hidden>
-      <img src="Images\November\gtaVi-vertical.png" class="overlay seasonal3Overlay-v" id="sOverlay3-v" hidden>
-      <div id="startScreen" hidden>
-        <h1 class="title">FrançaisFlash</h1>
+      <p class="score">Loading...</p>
+      <!--<div id="popup">
         <p>
-          This game is designed to help you practice your French skills by providing a French phrase or word and you answer them in the input field. Your score is saved by each gamemode. Reloading the site will bring your most recently played gamemode's score up. Reloading the site will not result in a free phrase reroll (Patched in <a href="https://github.com/bamslam1/french/releases#release-v5.2.3" target="_blank" rel="noopener noreferer">v5.2.3</a>).<br><br>Please note that rerolling the phrase will take off one point.
+          Are you sure
         </p>
-        <a href="https://bamslam1.github.io/my-projects"><button class="btn">Other Projects</button></a>
-        <button class="btn btn-loaded" id="urlCopy" onclick="copyLink();">Copy URL</button>
-        <button class="btn" data-page="game" onclick="gamemode();">Start Game</button>
-        <br><br>
-        <a href="https://github.com/bamslam1/french/discussions/7" target="_blank" rel="noopener noreferer"><button class="btn">Discuss</button></a>
-        <a href="#errors"><button class="abtErrors btn">More About Errors</button></a>
-        <a href="#bugs"><button class="btn">Known Bugs</button></a>
-      </div>
-
-      <div id="gamemode" hidden>
-        <a href="#start"><button class="btn btn-loaded">Back</button></a>
-        <h1>Choose Gamemode</h1>
-        <label class="opt" title="30 seconds. Answer as many as you can in a row. No hints or rerolls."><input type="checkbox" id="blitzToggle"> ⚡ Blitz</label>
-        <br>
-        <label class="opt" title="The phrase is hidden. You hear it and type the English."><input type="checkbox" id="listenToggle"> 🎧 Listen only</label>
-        <br><br>
-        <button class="btn btn-loaded" onclick="startGame('easy');">Easy</button>
-        <button class="btn btn-loaded" onclick="startGame('medium');">Medium</button>
-        <button class="btn btn-loaded" onclick="startGame('hard');">Hard</button>
-        <button class="btn btn-loaded" onclick="startGame('all');">All</button>
-        <button class="btn btn-loaded" onclick="if (customPhrases === allPhrases) {custom();} else if (customPhrases.length === 0) {console.log('Cannot Play With No Phrases'); custom();} else {startGame('custom');};">Custom</button>
-        <br><br>
-        <h2>Limited Time</h1>
-        <button class="btn btn-loaded" onclick="startGame('seasonal');" title="This gamemode will be removed on November 30st">🌹 Remeberance 🌹</button>
-        <button class="btn btn-loaded" onclick="startGame('seasonal2');" title="This gamemode will be removed on November 30st">🦃 Thanksgiving 🦃</button>
-        <button class="btn btn-loaded" onclick="startGame('seasonal3')" title="This gamemode will be removed on November 30st">GTA VI</button>
-        <br><br>
-        <p class="allScore space"></p>
-        <button class="red r-btn" onclick="resetAllScore();">Reset All Score</button>
-      </div>
-
-      <div id="game" hidden>
-        <button type="game" class="back btn" onclick="gamemode();">Back</button>
-        <button type="game" class="btn" id="mute" onclick="toggleMute();">🔊</button>
-        <p id="timer-display">Loading...</p>
-        <span lang="fr" translate="no"><p class="phrase">Loading...</p>
-        <div class="listenControls">
-          <button type="game" class="btn btn-loaded" id="speech" onclick="speak();">🔊 Listen</button>
-          <input type="range" id="speechRate" name="volume" min="1" max="20">
-          <label id="displayRate"></label></div></span>
-        <p id="hint"></p>
-        <div class="answer-row">
-        <input type="text" id="userInput" placeholder="Type english here" onkeypress="if(event.key === 'Enter') checkAnswer();"/>
-        <button type="game" class="submit btn" onclick="checkAnswer();">Submit</button>
-        <button type="game" class="reroll btn" onclick="reroll(false);">Reroll</button>
-        <button type="game" class="btn" onclick="custom();">Edit Phrases</button>
-        <button class="btn" onclick="score.hints++; updateScore(); this.hidden = true; hint();" id="hint-btn">Hint</button>
+      </div>-->
+      <button class="reset-score r-btn" onclick="score.wins = 0; score.losses = 0; updateScore();">Reset Score</button>
+      <button class="reset-score2 r-btn" onclick="resetAllScore();">Reset All Score</button>
+      <a href="https://github.com/bamslam1/french/issues" target="_blank" rel="noopener noreferer" class="report-a"><button class="report-btn btn-loaded" title="Press new issue to create a report">Report a Bug</button></a>
+      <p id="error">Loading...</p>
+      <main>
+        <img src="Images\November\remember-overlay.png" class="overlay seasonalOverlay" id="sOverlay" hidden>
+        <img src="Images\November\remember-vertical.png" class="overlay seasonalOverlay-v" id="sOverlay-v" hidden>
+        <img src="Images\November\thanksgiving-overlay.png" class="overlay seasonal2Overlay" id="sOverlay2" hidden>
+        <img src="Images\November\thanksgiving-vertical.png" class="overlay seasonal2Overlay-v" id="sOverlay2-v" hidden>
+        <img src="Images\November\gtaVi.png" class="overlay seasonal3Overlay" id="sOverlay3" hidden>
+        <img src="Images\November\gtaVi-vertical.png" class="overlay seasonal3Overlay-v" id="sOverlay3-v" hidden>
+        <div id="startScreen" hidden>
+          <a href="https://bamslam1.github.io/my-projects" hidden><button class="btn" id="projects-btn-prev" onclick="//confirmBack();">Back</button></a>
+          <h1 class="title">FrançaisFlash</h1>
+          <p>
+            This game is designed to help you practice your French skills by providing a French phrase or word and you answer them in the input field. Your score is saved by each gamemode. Reloading the site will bring your most recently played gamemode's score up. Reloading the site will not result in a free phrase reroll (Patched in <a href="https://github.com/bamslam1/french/releases#release-v5.2.3" target="_blank" rel="noopener noreferer">v5.2.3</a>).<br><br>Please note that rerolling the phrase will take off one point.
+          </p>
+          <a href="https://bamslam1.github.io/my-projects"><button class="btn" id="projects-btn">Other Projects</button></a>
+          <button class="btn btn-loaded" id="urlCopy" onclick="copyLink();">Copy URL</button>
+          <button class="btn" data-page="game" onclick="gamemode();">Start Game</button>
+          <br><br>
+          <a href="https://github.com/bamslam1/french/discussions/8" target="_blank" rel="noopener noreferer"><button class="btn">Discuss</button></a>
+          <a href="#errors"><button class="abtErrors btn">More About Errors</button></a>
+          <a href="#bugs"><button class="btn">Known Bugs</button></a>
         </div>
-      </div>
 
-      <div id="custom" hidden>
-        <button class="back btn" onclick="gamemode();">Back</button>
-        <br><br>
-        <input type="text" placeholder="French Here" id="frenchCustom" onkeypress="if(event.key === 'Enter') document.getElementById('englishCustom').focus();">
-        <input type="text" placeholder="English Here" id="englishCustom" onkeydown="
-        if(event.key === 'Enter') {addToCustom();} else if (event.key === 'Backspace' && document.getElementById('englishCustom').value === '') {document.getElementById('frenchCustom').focus();}">
-        <button class="btn" onclick="addToCustom();">Add</button>
-        <br><br>
-        <button class="btn" onclick="if (customPhrases === allPhrases) {custom();} else if (customPhrases.length === 0) {console.warn('Cannot Play With No Phrases');} else {startGame('custom');};">Play With These Phrases</button>
-        <br><br>
-        <button class="red r-btn" onclick="removeFromList();">Remove All</button>
-        <ul id="items"></ul>
-      </div>
-
-      <div id="result" hidden>
-        <button class="back btn" onclick="startGame();">Back</button>
-        <img src="https://media.tenor.com/Wlu-ZlnW7QYAAAAj/no-dislike.gif" class="wrongGif" alt="Incorrect GIF" hidden>
-        <p class="result-message space"></p>
-        <p class="correct-answer space"></p>
-        <a id="defineLink" href="#" target="_blank" rel="noopener"><button id="defineBtn" class="btn btn-loaded">Define</button></a>
-        <button class="btn-loaded" id="speech" onclick="speak(prevFrench || current?.french);">🔊 Listen</button>
-        <button class="btn" data-page="result" onclick="
-        pickPhrase(); startGame();" id="goAgain">Play Again</button>
-      </div>
-
-      <div id="abtErrors" hidden>
-        <a href="#start"><button class="btn">Back</button></a>
-        <p>
-          If you are experiencing an error that reads <b>"This mode is unavailable"</b> it means,
-          <br>(1) your internet is unreachable,<br>(2) the date to play the mode has passed,<br>(3) a bug has occurred. If so, report it, even if you aren't sure.<br>Please note: The limited time modes only last until the end of the month.
+        <div id="gamemode" hidden>
+          <a href="#start"><button class="btn btn-loaded">Back</button></a>
+          <h1>Choose Gamemode</h1>
+          <label class="opt" title="30 seconds. Answer as many as you can in a row. No hints or rerolls."><input type="checkbox" id="blitzToggle"> ⚡ Blitz</label>
+          <br>
+          <label class="opt" title="The phrase is hidden. You hear it and type the English."><input type="checkbox" id="listenToggle"> 🎧 Listen only</label>
           <br><br>
-
-          If you are experiencing an error that reads <b>"Unable to fetch date"</b> it means,
-          <br>(1) your internet is unreachable,<br>(2) a bug has occurred. If so, report it, even if you aren't sure.
+          <button class="btn btn-loaded" onclick="startGame('easy');">Easy</button>
+          <button class="btn btn-loaded" onclick="startGame('medium');">Medium</button>
+          <button class="btn btn-loaded" onclick="startGame('hard');">Hard</button>
+          <button class="btn btn-loaded" onclick="startGame('all');">All</button>
+          <button class="btn btn-loaded" onclick="if (customPhrases === allPhrases) {custom();} else if (customPhrases.length === 0) {console.log('Cannot Play With No Phrases'); custom();} else {startGame('custom');};">Custom</button>
           <br><br>
-
-          If you are experiencing an error that reads <b>"No Phrases"</b> it means,
-          <br>a bug has occurred and JavaScript isn't assigning the phrases properly.
+          <h2>Limited Time</h1>
+          <button class="btn btn-loaded" onclick="startGame('seasonal');" title="This gamemode will be removed on November 30st">🌹 Remeberance 🌹</button>
+          <button class="btn btn-loaded" onclick="startGame('seasonal2');" title="This gamemode will be removed on November 30st">🦃 Thanksgiving 🦃</button>
+          <button class="btn btn-loaded" onclick="startGame('seasonal3')" title="This gamemode will be removed on November 30st">GTA VI</button>
           <br><br>
+          <p class="allScore space"></p>
+          <button class="red r-btn" onclick="resetAllScore();">Reset All Score</button>
+        </div>
 
-          If you are experiencing an error that reads <b>"Per-gamemode score setup failed: (extra error info)"</b> inside the <a href="https://google.com/search?q=web+browser+console" rel="noreferer" target="blank_" title="Click me!">console</a> it means,
-          <br>a bug has occurred when showing the score for the gamemode that you last played.
+        <div id="game" hidden>
+          <button type="game" class="back btn" onclick="gamemode();">Back</button>
+          <button type="game" class="btn" id="mute" onclick="toggleMute();">🔊</button>
+          <p id="timer-display">Loading...</p>
+          <span lang="fr" translate="no"><p class="phrase">Loading...</p></span>
+          <p id="hint"></p>
+          <div class="answer-row">
+          <input type="text" id="userInput" placeholder="Type english here" onkeypress="if(event.key === 'Enter') checkAnswer();"/>
+          <button type="game" class="submit btn" onclick="checkAnswer();">Submit</button>
+          <button type="game" class="reroll btn" onclick="reroll(false);">Reroll</button>
+          <button type="game" class="btn" onclick="custom();">Edit Phrases</button>
+          <button class="btn" onclick="score.hints++; updateScore(); this.hidden = true; hint();" id="hint-btn">Hint</button>
+          </div>
+          <div class="listenControls">
+            <button type="game" class="btn btn-loaded" id="speech" onclick="speak();">🔊 Listen</button>
+            <div id="listenRateBig">
+              <input type="range" class="speechRate" name="volume" min="1" max="20">
+              <label class="displayRate"></label>
+            </div>
+          </div>
+          <div id="listenRateSmall">
+            <input type="range" class="speechRate" name="volume" min="1" max="20">
+            <label class="displayRate"></label>
+          </div>
+        </div>
+
+        <div id="custom" hidden>
+          <button class="back btn" onclick="gamemode();">Back</button>
           <br><br>
-
-          If you are experiencing an error that reads <b>"Unable to begin bgm playback"</b> this means,
-          <br>a bug has occurred in the proccess of playing the bgm file.
+          <input type="text" placeholder="French Here" id="frenchCustom" onkeypress="if(event.key === 'Enter') document.getElementById('englishCustom').focus();">
+          <input type="text" placeholder="English Here" id="englishCustom" onkeydown="
+          if(event.key === 'Enter') {addToCustom();} else if (event.key === 'Backspace' && document.getElementById('englishCustom').value === '') {document.getElementById('frenchCustom').focus();}">
+          <button class="btn" onclick="addToCustom();">Add</button>
           <br><br>
-
-          If you are experiencing an error that reads <b>"API request failed"</b> this means,
-          <br>(1) your internet is unreachable,
-          <br>(2) a bug occurred.
+          <button class="btn" onclick="if (customPhrases === allPhrases) {custom();} else if (customPhrases.length === 0) {console.warn('Cannot Play With No Phrases');} else {startGame('custom');};">Play With These Phrases</button>
           <br><br>
+          <button class="red r-btn" onclick="removeFromList();">Remove All</button>
+          <ul id="items"></ul>
+        </div>
 
-          If you are experiencing an error that reads <b>"Unable to stop sound"</b> it means the game was unable to stop the jeopardy sound due to,
-          <br>(1) a bug occurring.
-          <br><br>
+        <div id="result" hidden>
+          <button class="back btn" onclick="startGame();">Back</button>
+          <img src="https://media.tenor.com/Wlu-ZlnW7QYAAAAj/no-dislike.gif" class="wrongGif" alt="Incorrect GIF" hidden>
+          <p class="result-message space"></p>
+          <p class="correct-answer space"></p>
+          <a id="defineLink" href="#" target="_blank" rel="noopener"><button id="defineBtn" class="btn btn-loaded">Define</button></a>
+          <button class="btn-loaded" id="speech" onclick="speak(prevFrench || current?.french);">🔊 Listen</button>
+          <button class="btn" data-page="result" onclick="
+          pickPhrase(); startGame();" id="goAgain">Play Again</button>
+        </div>
 
-          If you are experienching an error that reads <b>"Failed to set define button"</b> it means the new define button couldn't be assigned a link to redirect the user to due to,
-          <br>(1) saved phrase not having the definition property to read and set the define button link to. This happens to every user already using the site on a particular gamemode.
-          <br>(2) A bug has occurred.
-          <br><br>
+        <div id="abtErrors" hidden>
+          <a href="#start"><button class="btn">Back</button></a>
+          <p>
+            If you are experiencing an error that reads <b>"This mode is unavailable"</b> it means,
+            <br>(1) your internet is unreachable,<br>(2) the date to play the mode has passed,<br>(3) a bug has occurred. If so, report it, even if you aren't sure.<br>Please note: The limited time modes only last until the end of the month.
+            <br><br>
 
-          If you are experiencing an error that reads <b>"TTS FAIL"</b> it means,
-          <br>(1) your browser doesn't support text to speech (tts),
-          <br>(2) a bug has occurred.
-          <br><br>
+            If you are experiencing an error that reads <b>"Unable to fetch date"</b> it means,
+            <br>(1) your internet is unreachable,<br>(2) a bug has occurred. If so, report it, even if you aren't sure.
+            <br><br>
 
-          If you are experiencing an error that reads <b>"Copy failed"</b> it means,
-          <br>(1) your browser is blocking the copy,
-          <br>(2) your device doesn't support copying and pasting,
-          <br>(3) a bug has occurred.
-          <br><br>
-          <b>If the page is stuck at "Loading...", check the <a href="https://google.com/search?q=how+to+open+web+browser+console+mobile+and+desktop" rel="noreferer" target="blank_" title="Click me!">console</a> and take a screenshot or copy the text into a <a href="https://github.com/bamslam1/french/issues/new" rel="noreferer" target="blank_" title="Click me to create a new bug report.">bug report.</a></b>
-        </p>
-      </div>
+            If you are experiencing an error that reads <b>"No Phrases"</b> it means,
+            <br>a bug has occurred and JavaScript isn't assigning the phrases properly.
+            <br><br>
 
-      <div id="bugs" hidden>
-        <a href="#start"><button class="btn">Back</button></a>
-        <h2>Bugs</h2>
-        <p>
-          1. Audio doesn't play immediatly when loading directly to a hash (e.g.  <a href="https://bamslam1.github.io/french/#game">https://bamslam1.github.io/french/#game</a>) due to browser restrictions. <b>(UNFIXABLE)</b>
-          <br><br>
-          If you find any more bugs, please report them at <a href="https://github.com/bamslam1/french/issues" rel="noreferer" target="blank_" title="Click me then press new issue to create a bug report.">https://github.com/bamslam1/french/issues</a> and if possible, take a screenshot.
-        </p>
-      </div>
+            If you are experiencing an error that reads <b>"Per-gamemode score setup failed: (extra error info)"</b> inside the <a href="https://google.com/search?q=web+browser+console" rel="noreferer" target="blank_" title="Click me!">console</a> it means,
+            <br>a bug has occurred when showing the score for the gamemode that you last played.
+            <br><br>
 
-      <div class="filler"></div>
-    </main>
+            If you are experiencing an error that reads <b>"Unable to begin bgm playback"</b> this means,
+            <br>a bug has occurred in the proccess of playing the bgm file.
+            <br><br>
+
+            If you are experiencing an error that reads <b>"API request failed"</b> this means,
+            <br>(1) your internet is unreachable,
+            <br>(2) a bug occurred.
+            <br><br>
+
+            If you are experiencing an error that reads <b>"Unable to stop sound"</b> it means the game was unable to stop the jeopardy sound due to,
+            <br>(1) a bug occurring.
+            <br><br>
+
+            If you are experienching an error that reads <b>"Failed to set define button"</b> it means the new define button couldn't be assigned a link to redirect the user to due to,
+            <br>(1) saved phrase not having the definition property to read and set the define button link to. This happens to every user already using the site on a particular gamemode.
+            <br>(2) A bug has occurred.
+            <br><br>
+
+            If you are experiencing an error that reads <b>"TTS FAIL"</b> it means,
+            <br>(1) your browser doesn't support text to speech (tts),
+            <br>(2) a bug has occurred.
+            <br><br>
+
+            If you are experiencing an error that reads <b>"Copy failed"</b> it means,
+            <br>(1) your browser is blocking the copy,
+            <br>(2) your device doesn't support copying and pasting,
+            <br>(3) a bug has occurred.
+            <br><br>
+            <b>If the page is stuck at "Loading...", check the <a href="https://google.com/search?q=how+to+open+web+browser+console+mobile+and+desktop" rel="noreferer" target="blank_" title="Click me!">console</a> and take a screenshot or copy the text into a <a href="https://github.com/bamslam1/french/issues/new" rel="noreferer" target="blank_" title="Click me to create a new bug report.">bug report.</a></b>
+          </p>
+        </div>
+
+        <div id="bugs" hidden>
+          <a href="#start"><button class="btn">Back</button></a>
+          <h2>Bugs</h2>
+          <p>
+            1. Audio doesn't play immediatly when loading directly to a hash (e.g.  <a href="#game">https://bamslam1.github.io/french/#game</a>) due to browser restrictions. <b>(UNFIXABLE)</b>
+            <br><br>
+            If you find any more bugs, please report them at <a href="https://github.com/bamslam1/french/issues" rel="noreferer" target="blank_" title="Click me then press new issue to create a bug report.">https://github.com/bamslam1/french/issues</a> and if possible, take a screenshot.
+          </p>
+        </div>
+
+        <div class="filler"></div>
+      </main>
     </div>
     <script src="Scripts/script.js" defer></script>
   </body>
