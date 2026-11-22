@@ -786,10 +786,6 @@ function fadeTo(target, sound, onDone) {
   fadeTimers.set(sound, fadeTimer);
 }
 
-// Browsers refuse to play audio until the user has interacted with the page.
-// When the site is opened straight onto #game there has been no interaction yet,
-// so the first play() is rejected. Instead of showing an error, wait for the
-// first click / key press / tap and then start the music.
 let bgmRetryPending = false;
 
 function retryBgmOnInteraction() {
@@ -896,11 +892,9 @@ const phrasesByMode = { all: allPhrases, easy: easyPhrases, medium: mediumPhrase
 
 let currentMode = load('frenchGamemode', 'all');
 
-// Blitz and Listen only are checkboxes on the gamemode screen. They combine with
-// any gamemode (Easy, Medium, Hard, All, Custom, the limited-time ones).
 let blitzOn = load('frenchBlitz', false) === true;
 let listenOnly = load('frenchListenOnly', false) === true;
-if (currentMode === 'blitz') {   // old saves had Blitz as its own mode
+if (currentMode === 'blitz') {
   currentMode = 'all';
   blitzOn = true;
 }
@@ -940,9 +934,6 @@ function focus() {
 document.getElementById("userInput").focus();
 };
 
-// ---------- Scores ----------
-// One { wins, losses, hints } object per mode combination, saved under 'frenchScores'.
-// Blitz combinations reuse the fields: wins = best streak, losses = current streak.
 const BASE_MODES = ['all', 'easy', 'medium', 'hard', 'custom', 'seasonal', 'seasonal2', 'seasonal3'];
 const MODE_VARIANTS = ['', '_blitz', '_listen', '_blitzListen'];
 const SCORE_MODES = BASE_MODES.flatMap(m => MODE_VARIANTS.map(v => `${m}${v}`));
@@ -958,7 +949,6 @@ let modeScores = {};
 
   for (const m of SCORE_MODES) modeScores[m] = fresh(saved?.[m]);
 
-  // Migrate legacy global blitz/listen scores into 'all_*' if they haven't been created yet
   if (saved && typeof saved === 'object') {
     if (saved.blitz && !saved.all_blitz) modeScores.all_blitz = fresh(saved.blitz);
     if (saved.listen && !saved.all_listen) modeScores.all_listen = fresh(saved.listen);
@@ -968,8 +958,6 @@ let modeScores = {};
   if (!saved && old) modeScores.all = fresh(old);
 })();
 
-// Point `score` at the object for the exact mode combination being played.
-// Call this every time currentMode, blitzOn, or listenOnly changes.
 function scoreKey() {
   let suffix = '';
   if (blitzOn && listenOnly) suffix = '_blitzListen';
@@ -1001,8 +989,11 @@ function showScore() {
   const current = document.querySelector('.score');
   if (current) current.innerHTML = line(scoreKey(), score);
 
+  const hasData = s => s && (s.wins > 0 || s.losses > 0 || s.hints > 0);
   const all = document.querySelector('.allScore');
-  if (all) all.innerHTML = SCORE_MODES.filter(k => modeScores[k]).map(k => line(k, modeScores[k])).join('<br>');
+  if (all) all.innerHTML = SCORE_MODES.filter(k => hasData(modeScores[k])).map(k => line(k, modeScores[k])).join('<br>');
+  if (all.textContent == '') {
+    all.innerHTML = 'No Scores To Show. Play a round to get some scores!';}
 }
 
 function updateScore() {
@@ -1019,9 +1010,7 @@ function resetScore() {
 
 syncScore();
 showScore();
-// ---------- end scores ----------
 
-// ---------- Blitz / Listen only checkboxes ----------
 (function setupToggles() {
   const blitzBox = document.getElementById('blitzToggle');
   const listenBox = document.getElementById('listenToggle');
@@ -1041,7 +1030,7 @@ showScore();
     listenBox.addEventListener('change', () => {
       listenOnly = listenBox.checked;
       save('frenchListenOnly', listenOnly);
-      syncScore();          // switch the score line to the active mode combination
+      syncScore();
       showScore();
     });
   }
@@ -1265,23 +1254,11 @@ async function startGame(mode = currentMode) {
   const restoreButtons = () => dimmed.forEach(el => el.classList.add('btn-loaded'));
   dimmed.forEach(el => el.classList.remove('btn-loaded'));
 
-  // couldn't start this mode: put the buttons back and return to the gamemode screen
   const backToGamemodes = text => {
     restoreButtons();
     error(text);
     gamemode();
   };
-  const slider = document.getElementById('speechRate');
-
-  slider.value = speechRate * 10;
-
-  document.getElementById('displayRate').textContent = speechRate + 'x';
-
-  slider.addEventListener('input', () => {
-    speechRate = Number(slider.value) / 10;
-    document.getElementById('displayRate').textContent = speechRate + 'x';
-    localStorage.setItem('speechRate', JSON.stringify(speechRate));
-  });
 
     let allowed = true;
   if (mode === 'seasonal' || mode === 'seasonal2' || mode === 'seasonal3') {
@@ -1582,6 +1559,21 @@ function showAbtErrors() {
 }
 
 let speechRate = load('speechRate', 0.9);
+
+function syncSpeechRate() {
+  document.querySelectorAll('.speechRate').forEach(s => s.value = Math.round(speechRate * 10));
+  document.querySelectorAll('.displayRate').forEach(l => l.textContent = speechRate + 'x');
+}
+
+document.querySelectorAll('.speechRate').forEach(slider => {
+  slider.addEventListener('input', () => {
+    speechRate = Number(slider.value) / 10;
+    syncSpeechRate();
+    try { localStorage.setItem('speechRate', JSON.stringify(speechRate)); } catch {}
+  });
+});
+
+syncSpeechRate();
 let blitzStartTime = 0;
 
 function startBlitzCountdown() {
@@ -1633,6 +1625,11 @@ function hint() {
   msg.textContent = `💡 Hint: ${current.hint}`;
 }
 
+function confirmBack() {
+  document.getElementById('startScreen').hidden = true;
+  document.getElementById('popup').hidden = false;
+}
+
 async function copyLink() {
   const btn = document.getElementById('urlCopy');
   const text = 'https://bamslam1.github.io/french';
@@ -1645,6 +1642,60 @@ async function copyLink() {
     error('Copy failed');
   }
 }
+
+function cameFromProjects() {
+  const KEY = 'cameFromProjects';
+  const nav = performance.getEntriesByType('navigation')[0];
+
+  // Reload: keep the answer from the original visit
+  if (nav && nav.type === 'reload') {
+    try { return sessionStorage.getItem(KEY) === '1'; } catch (e) { return false; }
+  }
+
+  // Fresh visit: work it out from scratch
+  let result = false;
+
+  // 1. Referrer
+  try {
+    if (document.referrer) {
+      const url = new URL(document.referrer);
+      const domainOk =
+        url.hostname === 'bamslam1.github.io' ||
+        url.hostname === '127.0.0.1' ||
+        url.hostname === 'localhost';
+      const pathOk =
+        url.pathname === '/my-projects' ||
+        url.pathname.startsWith('/my-projects/');
+      result = domainOk && pathOk;
+    }
+  } catch (e) {}
+
+  // 2. ?from=my-projects
+  if (!result) {
+    result = new URLSearchParams(location.search).get('from') === 'my-projects';
+  }
+
+  // Save for reloads only (overwrites the old value either way)
+  try { sessionStorage.setItem(KEY, result ? '1' : '0'); } catch (e) {}
+
+  return result;
+}
+
+if (cameFromProjects()) {
+  document.getElementById('projects-btn').parentElement.hidden = true;
+  document.getElementById('projects-btn-prev').parentElement.hidden = false;
+}
+
+addEventListener('click', btn => {
+
+  const thisV = btn.target.value;
+  const valid = btn.target.hasAttribute('data-valid');
+  if (valid) {
+    lastValid = btn;
+    if (thisV === 'none') {document.documentElement.style.removeProperty('--bg-color'); return}
+    try {document.documentElement.style.setProperty('--bg-color', thisV);} catch {};
+    }
+});
 
 const SCREENS = ['startScreen', 'gamemode', 'game', 'result', 'custom', 'abtErrors', 'bugs'];
 
