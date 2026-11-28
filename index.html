@@ -45,16 +45,18 @@
 
     <div class="page-content">
       <select class="select">
-        <option value="" selected disabled style="cursor: not-allowed;">Theme (Beta)</option>
+        <option value="" selected disabled style="cursor: not-allowed;">Change Theme</option>
         <!--<option data-valid value="white">Disabled</option>-->
         <option for="force-dark" data-valid value="black" style="background-color: black; color: white;">Black</option>
         <option data-valid value="white" style="background-color: white;">White</option>
         <option data-valid value="blue" style="background-color: blue; color: white;">Blue</option>
         <option data-valid value="red" style="background-color: red;">Red</option>
+        <option data-valid value="orange" style="background-color: orange;">Orange</option>
         <option data-valid value="green" style="background-color: green;">Green</option>
         <option data-valid value="limegreen" style="background-color: limegreen;">Light Green</option>
         <option data-valid value="purple" style="background-color: purple; color: white;">Purple</option>
         <option data-valid value="yellow" style="background-color: yellow;">Yellow</option>
+        <!--ADD AN RGB OPTION (USER TYPES RBG VALUE)-->
       </select>
     </div>
 
@@ -96,9 +98,9 @@
         <div id="gamemode" hidden>
           <a href="#start"><button class="btn btn-loaded">Back</button></a>
           <h1>Choose Gamemode</h1>
-          <label class="opt" title="30 seconds. Answer as many as you can in a row. No hints or rerolls."><input type="checkbox" id="blitzToggle"> ⚡ Blitz</label>
+          <label class="opt txt" title="30 seconds. Answer as many as you can in a row. No hints."><input type="checkbox" id="blitzToggle"> ⚡<span> Blitz</span></label>
           <br>
-          <label class="opt" title="The phrase is hidden. You hear it and type the English."><input type="checkbox" id="listenToggle"> 🎧 Listen only</label>
+          <label class="opt txt" title="The phrase is hidden. You hear it and type the English."><input type="checkbox" id="listenToggle"> 🎧<span> Listen only</span></label>
           <br><br>
           <button class="btn btn-loaded" onclick="startGame('easy');">Easy</button>
           <button class="btn btn-loaded" onclick="startGame('medium');">Medium</button>
