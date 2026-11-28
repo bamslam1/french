@@ -36,8 +36,7 @@
 .btn-dark { display: var(--show-dark-btn); }
 .btn-light { display: var(--show-light-btn); }
 
-.select,
-.select::picker(select) {
+.select {
   appearance: base-select;
   font: bold 14px sans-serif;
   cursor: pointer;
@@ -47,6 +46,49 @@
   height: 3rem;
   position: fixed;
   z-index: 9999;
+  mix-blend-mode: normal;
+  background-color: #4CAF50;
+  color: white;
+  border-radius: 5px;
+}
+
+.select,
+.select::picker(select) {
+  appearance: base-select;
+}
+
+/* the open list */
+.select::picker(select) {
+  width: 14rem;
+  height: auto;
+  max-height: 70vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 6px;
+  border: 2px solid white;
+  border-radius: 8px;
+  background: #222;
+}
+
+.select option {
+  font-size: 18px;
+  padding: 10px 14px;
+  color: white;
+  -webkit-text-stroke: 1px black;
+  paint-order: stroke fill;
+}
+
+.select {
+  -webkit-text-stroke: 1px black;
+  paint-order: stroke fill;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.select option:disabled {
+  color: white;
+  opacity: 0.7;
 }
 
 .select:open::picker-icon {
@@ -66,11 +108,9 @@
 
 .select option::checkmark { display: none; }
 
-.select {
-  mix-blend-mode: normal;
-  background-color: #4CAF50;
+.select option {
   color: white;
-  border-radius: 5px;
+  -webkit-text-stroke: 1px black;
 }
 
 body {
